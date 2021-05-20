@@ -11,10 +11,9 @@ install helm https://helm.sh/docs/intro/install/
 
 helm version is 3.5.4
 
-k8s version is 1.8.2
+k8s version is 1.18.2
 
 # workload
-locust version is 1.5.1
 
 Go into load-gen. and check README.
 
