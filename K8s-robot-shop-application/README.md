@@ -6,6 +6,7 @@ The easiest way to install the Instana agent is with the helm [chart](https://hu
 
 Install Stan's Robot Shop on to your K8s cluster using the helm chart, see the [README](helm/README.md) for details of the various options.
 
+Go into helm, and read README
 ```shell
 $ cd helm
 $ helm install --name robot-shop --namespace robot-shop .
