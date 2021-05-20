@@ -14,7 +14,7 @@ web         ClusterIP   10.105.207.202   <none>        8080/TCP             10d
 ```
 
 ```
-locust --host http://10.105.207.202:8080 -f robot-shop-2.py -u 10 -t 110s --print-stats --csv=locust  --headless 
+locust --host http://10.105.207.202:8080 -f robot-shop.py -u 10 -t 110s --print-stats --csv=locust  --headless 
 ```
 
 # how to run program

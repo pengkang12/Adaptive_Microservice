@@ -74,7 +74,7 @@ def load_yaml_job_spec(cntCompletions=10,cntParallelism=2,zone="red",jobType="st
     import yaml 
     body = None
     if jobType == "stream" or "":
-        with open('stream.yaml','r') as f:
+        with open('interference/stream.yaml','r') as f:
             body = yaml.load(f, yaml.FullLoader) 
             pprint(body)
     if body != None:    

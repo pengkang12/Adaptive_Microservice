@@ -8,7 +8,7 @@ from pssh.utils import enable_logger, logger
 from gevent import joinall
 import time
 import os
-from sftp import copy_remote_to_local
+from lib.sftp import copy_multiple_remote_to_local
 from perfstat_processor import post_process_perfstat
 from collections import defaultdict
 exp_name = sys.argv[1]
