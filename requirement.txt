@@ -1,3 +1,7 @@
 pandas
-paramiko
+paramiko==2.7.2
 pssh==2.3.1
+prometheus-http-client==1.0.0
+parallel-ssh==2.5.4
+kubernetes==12.0.1
+locust==3.5.1

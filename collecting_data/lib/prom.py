@@ -71,7 +71,24 @@ def promQueries(startTime, stopTime, testDirPath):
 
     createRawCSVs(timestampList, podNameList, testDirPath, podMetricsDict)
 
+def main():
+    prom = Prometheus()
+    namespace = "robot-shop" 
+    startTime = time.time()
+    time.sleep(30)
+    stopTime = time.time()
+
+
+    step='5s'
+    cpu5s = json.loads(prom.query_rang(metric='sum(container_cpu_usage_seconds_total{namespace="'+namespace+'"})', start=startTime, end=stopTime, step=step))
+    cpu5s = json.loads(prom.query_rang(metric='sum(irate(container_cpu_usage_seconds_total{namespace="'+namespace+'"}[1m])) by (pod_name)', start=startTime, end=stopTime, step='5s'))
+    print(cpu5s)     
+    cpu5s = json.loads(prom.query_rang(metric='sum(irate(container_cpu_usage_seconds_total{namespace="'+namespace+'"}[1m]))', start=startTime, end=stopTime, step='5s'))
+     
+    print(cpu5s)     
 
 
 
+if __name__ == '__main__':
+    main()
 
