@@ -19,7 +19,8 @@ import ast
 from online.clusterConfig import clusterSetup, deletebatchJobs
 from online.kube_config import populateClusterConfig, ClusterInfo
 from online.prom import promQueries
-
+from online.locust_basic import moveLocustResults
+ 
 #TODO: Add ability to place interference pods on specific nodes in cluster
 #TODO: Add ability to scale different number of pods for each micro-service
 #TODO: Figure out strategy for pod isolation on nodes when applying interference to those specific pod(s)
@@ -30,22 +31,6 @@ def testDirInit(expName):
     if not os.path.exists(testDirStr):
         os.makedirs(testDirStr)
     return testDirStr
-
-def moveLocustResults(testDirPath):
-    workingDir = os.getcwd()
-    if os.path.isfile(os.path.join(workingDir , 'locust_distribution.csv')):
-        if not os.path.exists(testDirPath):
-            os.makedirs(testDirPath)
-        os.rename(os.path.join(workingDir, 'locust_distribution.csv'), os.path.join(testDirPath, 'locust_distribution.csv'))
-    else:
-        print("Unable to find locust_distribution.csv for destination folder %s\n", testDirPath)
-
-    if os.path.isfile(os.path.join(workingDir, 'locust_requests.csv')):
-        if not os.path.exists(testDirPath):
-            os.makedirs(testDirPath)
-        os.rename(os.path.join(workingDir, 'locust_requests.csv'), os.path.join(testDirPath , 'locust_requests.csv'))
-    else:
-        print("Unable to find locust_requests.csv for destination folder %s\n", testDirPath)
 
 # generate and save container metrics csv files in testing dir
 def createRawCSVs(tStampList, podNmList, testDirPath, podMetDict):
@@ -175,7 +160,7 @@ def main():
         time.sleep(20)
 
         # build locust command to run locust
-        locustCmd = "locust --host http://" + args["k8url"] + " -f " + args["locustF"] + " -c " + clientCnt + " -r " + hatchRate + " -t " + locustDur + " --no-web --print-stats --csv=locust "
+        locustCmd = "locust --host http://" + args["k8url"] + " -f " + args["locustF"] + " -r " + clientCnt + " -t " + locustDur + " --headless --print-stats --csv=locust "
         locustArgs = shlex.split(locustCmd)
         print("locust Command: %s\n" % locustCmd)
         print("locust CMD args: %s\n" % locustArgs)

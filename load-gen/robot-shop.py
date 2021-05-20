@@ -94,3 +94,5 @@ class UserBehavior(HttpUser):
             print('Error request')
             cart = {'total': 0, 'tax': 0}
             self.client.post('/api/payment/pay/partner-57', json=cart, headers={'x-forwarded-for': fake_ip})
+
+
