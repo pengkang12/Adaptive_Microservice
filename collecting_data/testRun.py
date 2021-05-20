@@ -186,7 +186,7 @@ def main():
         # Exec perfstat using params passed in through testParam file
         # #format: python <script_name> exp_name total_duration output_dir
 
-        perfstatCmdString = "python3.6 perfstat_driver.py {} {} {}".format(exp_Nm,runtime,testDirPath)
+        perfstatCmdString = "python3.6 collecting_data/perfstat_driver.py {} {} {}".format(exp_Nm,runtime,testDirPath)
 
         perfstatArgs = shlex.split(perfstatCmdString)
         perfstatResultFNm = testDirPath + "/perfstatLog.txt"
@@ -195,7 +195,7 @@ def main():
         
         print("Started Perfstat {0}".format(perfstatCmdString))        
         # Exec vmstat using params passed
-        vmstatCmdString = "python3.6 vmstat_driver.py {} {} {} {} {}".format(exp_Nm,runtime,testDirPath,start_po,end_po)
+        vmstatCmdString = "python3.6 collecting_data/vmstat_driver.py {} {} {} {} {}".format(exp_Nm,runtime,testDirPath,start_po,end_po)
 
         vmstatArgs = shlex.split(vmstatCmdString)
         vmstatResultFNm = testDirPath + "/vmstatLog.txt"
