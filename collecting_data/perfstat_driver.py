@@ -70,7 +70,7 @@ for node in list_of_kvm:
     for vm in list_of_vms:
         fetch_files.append("{}_{}_perfstat.temp".format(vm,exp_name))
         file_list.append("{}_{}_perfstat.temp".format(vm,exp_name))
-    copy_remote_to_local(node, fetch_files, output_dir)
+    copy_multiple_remote_to_local(node, fetch_files, output_dir)
     try:
         output = client.run_command("sudo kill -9 `ps aux | grep perf | awk '{print $2}'`")
     except Exception as e:

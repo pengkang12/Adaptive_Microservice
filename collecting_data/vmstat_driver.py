@@ -49,7 +49,7 @@ def main():
         src_file_name = "{}_vmfile.tmp".format(exp_name)
         dst_file_name = "{}_vmfile.tmp".format(vm)
         print("trying to copy: {} {} {}".format(vm,src_file_name,dst_file_name,output_dir))
-        copy_remote_to_local(vm,src_file_name, dst_file_name, output_dir)
+        copy_single_remote_to_local(vm,src_file_name, dst_file_name, output_dir)
         #post_process_outfile
         output_file = os.path.join(output_dir,"{}_vmfile.csv".format(vm))
         input_file = os.path.join(output_dir,"{}_vmfile.tmp".format(vm))
