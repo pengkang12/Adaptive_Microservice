@@ -94,7 +94,7 @@ def main():
         time.sleep(20)
 
         # build locust command to run locust
-        locustCmd = "locust --host http://" + args["k8url"] + " -f " + args["locustF"] + " -r " + clientCnt + " -t " + locustDur + " --headless --print-stats --csv=locust "
+        locustCmd = "locust --host http://" + args["k8url"] + " -f " + args["locustF"] + " -u " + clientCnt + " -t " + locustDur + " --headless --print-stats --csv=locust "
 
         locustArgs = shlex.split(locustCmd)
         print("locust Command: %s\n" % locustCmd)
@@ -154,7 +154,11 @@ def main():
         time.sleep(30)        
         promQueries(int(startT), int(stopT), testDirPath)
         
-        additional_runtime = (int(runtime) - int(stopT-startT) ) + 30
+        # Exec command to save pod mapping information
+        cmd = "kubectl get pod -o wide -n robot-shop | awk '{print $1, $7}' > "+testDirPath+"/container_node_mapping.csv"
+        os.system(cmd)       
+ 
+        additional_runtime = (int(runtime) - int(stopT-startT) ) + 10
         print ("[debug] sleeping for additional {} sec".format(additional_runtime))
         if additional_runtime > 0:
             time.sleep(additional_runtime)
