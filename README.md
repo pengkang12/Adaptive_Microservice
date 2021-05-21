@@ -32,4 +32,9 @@ locust --host http://`kubectl get service -n robot-shop |grep web| awk '{print $
 
 bash run.sh
 
+# how to analyze data
 
+```
+cd analyze_data
+python driver_main.py ../example_data/
+```
