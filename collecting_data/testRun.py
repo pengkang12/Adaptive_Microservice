@@ -39,7 +39,8 @@ class podDataCollection(object):
     
 def testDirInit(expName):
     workingDir = os.getcwd()
-    testDirStr = os.path.join(workingDir, expName)
+    testDirStr = os.path.join(workingDir, 'data')
+    testDirStr = os.path.join(testDirStr, expName)
     if not os.path.exists(testDirStr):
         os.makedirs(testDirStr)
     return testDirStr
