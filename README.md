@@ -29,8 +29,9 @@ locust --host http://`kubectl get service -n robot-shop |grep web| awk '{print $
 
 
 # how to run program
-
+```
 bash run.sh
+```
 
 # how to analyze data
 

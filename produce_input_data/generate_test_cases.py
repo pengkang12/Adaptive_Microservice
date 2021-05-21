@@ -9,7 +9,7 @@
 import sys
 from datetime import date 
 import hashlib
-duration = 300 #sec
+duration = 60 #sec
 
 
 def getClusterConfiguration(cntCart=1,cntCatalogue=1,cntShipping=1,cntPayment=1,cntRatings=1,cntUser=1,cntWeb=1):
