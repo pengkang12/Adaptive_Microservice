@@ -1,9 +1,11 @@
 #https://itnext.io/k8s-monitor-pod-cpu-and-memory-usage-with-prometheus-28eec6d84729
 
 import time
-from  prometheus_http_client import Prometheus
 import json
 import csv
+import os
+
+from  prometheus_http_client import Prometheus
 
 class podDataCollection(object):
     podName = ""
@@ -15,6 +17,84 @@ class podDataCollection(object):
 
     def __init__(self, name):
         self.podName = name
+
+# generate and save container metrics csv files in testing dir
+def createRawCSVs(tStampList, podNmList, testDirPath, podMetDict):
+    # create CPU csv
+    with open(os.path.join(testDirPath, 'container-cpu5sRaw.csv'), mode='w') as cpu_file:
+        fieldnms = ['Pod_Name']
+        fieldnms.extend(tStampList)
+        writer = csv.DictWriter(cpu_file, fieldnames=fieldnms)
+        writer.writeheader()
+
+        for pod in podNmList:
+            cpuVals = podMetDict[pod].cpu5s
+            rowDict = {'Pod_Name' : pod }
+            for pair in cpuVals:
+                if pair[0] in tStampList:
+                    rowDict[pair[0]] = pair[1]
+            try:
+                writer.writerow(rowDict)
+            except:
+                print("Cpu write error: {0}".format(rowDict))
+
+    # create MemW/R csv
+    with open(os.path.join(testDirPath, 'container-memR5sRaw.csv'), mode='w') as memR_file:
+        fieldnms = ['Pod_Name']
+        fieldnms.extend(tStampList)
+        writer = csv.DictWriter(memR_file, fieldnames=fieldnms)
+        writer.writeheader()
+
+        for pod in podNmList:
+            memRVals = podMetDict[pod].memR5s
+            rowDict = {'Pod_Name' : pod }
+            for pair in memRVals:
+                if pair[0] in tStampList:
+                    rowDict[pair[0]] = pair[1]
+            writer.writerow(rowDict)
+
+    with open(os.path.join(testDirPath, 'container-memW5sRaw.csv'), mode='w') as memW_file:
+        fieldnms = ['Pod_Name']
+        fieldnms.extend(tStampList)
+        writer = csv.DictWriter(memW_file, fieldnames=fieldnms)
+        writer.writeheader()
+
+        for pod in podNmList:
+            memWVals = podMetDict[pod].memW5s
+            rowDict = {'Pod_Name' : pod }
+            for pair in memWVals:
+                if pair[0] in tStampList:
+                    rowDict[pair[0]] = pair[1]
+            writer.writerow(rowDict)
+
+    # create NetW/R csv
+    with open(os.path.join(testDirPath, 'container-netR5sRaw.csv'), mode='w') as netR_file:
+        fieldnms = ['Pod_Name']
+        fieldnms.extend(tStampList)
+        writer = csv.DictWriter(netR_file, fieldnames=fieldnms)
+        writer.writeheader()
+
+        for pod in podNmList:
+            netRVals = podMetDict[pod].netR5s
+            rowDict = {'Pod_Name' : pod }
+            for pair in netRVals:
+                 if pair[0] in tStampList:
+                    rowDict[pair[0]] = pair[1]
+            writer.writerow(rowDict)
+
+    with open(os.path.join(testDirPath, 'container-netW5sRaw.csv'), mode='w') as netW_file:
+        fieldnms = ['Pod_Name']
+        fieldnms.extend(tStampList)
+        writer = csv.DictWriter(netW_file, fieldnames=fieldnms)
+        writer.writeheader()
+
+        for pod in podNmList:
+            netWVals = podMetDict[pod].netW5s
+            rowDict = {'Pod_Name' : pod }
+            for pair in netWVals:
+                if pair[0] in tStampList:
+                    rowDict[pair[0]] = pair[1]
+            writer.writerow(rowDict)
 
 # promQueries function 
 def promQueries(startTime, stopTime, testDirPath):
