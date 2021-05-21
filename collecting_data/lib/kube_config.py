@@ -28,15 +28,6 @@ class podDataCollection(object):
     def __init__(self, name):
         self.podName = name
 
-# TODO: move static config of this object to a conf file so it isn't hard coded    
-class ClusterInfo(object):
-    testNS = "robot-shop"
-    workflowDeplList = {"cart": 0, "catalogue": 0,"shipping":0, "payment":0,"ratings":0,"user":0,"web":0}
-    interferenceZone = ""
-    interferenceLvl = 0
-    interferenceCompletionCount = 0
-    interferenceType = "stream"
-
     
 def testDirInit(expName):
     workingDir = os.getcwd()

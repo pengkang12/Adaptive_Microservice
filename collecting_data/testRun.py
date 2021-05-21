@@ -16,8 +16,8 @@ import yaml
 import datetime
 import ast 
 
-from lib.clusterConfig import clusterSetup, deletebatchJobs
-from lib.kube_config import populateClusterConfig, ClusterInfo
+from lib.clusterConfig import clusterSetup, deletebatchJobs, ClusterInfo
+from lib.kube_config import populateClusterConfig 
 from lib.prom import promQueries
 from lib.locust_basic import moveLocustResults
 
@@ -65,8 +65,12 @@ def main():
     batch_v1beta1 = client.BatchV1Api()
 
     clusterConfs = ClusterInfo()
-   
-   # -------- Main testing loop Start ----------
+    interference_level = {} 
+    interference_level['low'] = 1
+    interference_level['medium'] = 2
+    interference_level['high'] = 3 
+
+    # -------- Main testing loop Start ----------
     for line in open(args["file"]):
         if line.startswith("#"):
             continue
@@ -77,9 +81,11 @@ def main():
         exp_Nm = lnArgs[0]
         runtime = lnArgs[1]
         clientCnt = lnArgs[3]
-        hatchRate = lnArgs[2]
+
+        clusterConfs.interferenceType = lnArgs[2]   
         clusterConfs.interferenceZone = lnArgs[4]
-        clusterConfs.interferenceLvl = int(lnArgs[5])
+        clusterConfs.interferenceLvl = interference_level[lnArgs[5]]
+
         populateClusterConfig(clusterConfs, ast.literal_eval(lnArgs[6]))
         start_po = lnArgs[7]
         end_po = lnArgs[8]
@@ -90,7 +96,7 @@ def main():
         
         # setup cluster using input params
         print("Configuring cluster to match experiment input, %s\n" %clusterConfs)
-        clusterSetup(apps_v1, batch_v1beta1,clusterConfs)
+        clusterSetup(apps_v1, batch_v1beta1, clusterConfs)
         print("5 second grace period\n")
         time.sleep(20)
 

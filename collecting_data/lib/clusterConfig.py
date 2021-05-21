@@ -2,6 +2,16 @@ from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 from pprint import pprint
 import time
+import yaml 
+
+# TODO: move static config of this object to a conf file so it isn't hard coded    
+class ClusterInfo(object):
+    testNS = "robot-shop"
+    workflowDeplList = {"cart": 0, "catalogue": 0,"shipping":0, "payment":0,"ratings":0,"user":0,"web":0}
+    interferenceZone = ""
+    interferenceLvl = 0
+    interferenceCompletionCount = 0
+    interferenceType = "stream"
 
 
 def deletebatchJobs(batch_api,configs):
@@ -61,7 +71,8 @@ def clusterSetup(api_instance, batch_api, configs):
     namespace=configs.testNS 
     pretty = 'true' # str | If 'true', then the output is pretty printed. (optional)
     if configs.interferenceLvl > 0:
-        body = load_yaml_job_spec(10,configs.interferenceLvl,configs.interferenceZone, configs.interferenceType)
+        body = load_yaml_job_spec(10, configs.interferenceLvl,configs.interferenceZone, configs.interferenceType)
+        print(body)
         try: 
             api_response = batch_api.create_namespaced_job(namespace=namespace, body=body, pretty=pretty)
             pprint(api_response)
@@ -71,8 +82,8 @@ def clusterSetup(api_instance, batch_api, configs):
 
 
 def load_yaml_job_spec(cntCompletions=10,cntParallelism=2,zone="red",jobType="stream"):
-    import yaml 
     body = None
+    print(jobType)
     if jobType == "stream" or "":
         with open('interference/stream.yaml','r') as f:
             body = yaml.load(f, yaml.FullLoader) 
@@ -91,29 +102,3 @@ def load_yaml_job_spec(cntCompletions=10,cntParallelism=2,zone="red",jobType="st
         
 
     return body 
-
-
-
-
-    
-def create_batch_job_spec(cntCompletions=10,cntParallelism=2,zone="red",jobType="memory"):
-    body = client.V1Job() # V1Job | 
-    print(body)
-    body.kind = "Job"
-    body.spec.parallelism = cntParallelism
-    body.spec.completions = cntCompletions
-    #TODO: Remove ""
-    if joyType=="" or jobType=="memory":
-        body.metadata.name  = "stream"
-        body.spec.template.metdata.name = "stream-pod"
-        body.spec.template.spec.containers.name = "stream-container"
-        body.spec.template.spec.containers.image = "joyrahman/stream3:v8"
-    
-    zoneSelector = dict()
-    #TODO: remove zone null check
-    if zone is None:
-        zone == "red"
-    zoneSelector['color'] = zone
-    body.spec.template.spec.node_selector = zoneSelector
-
-    return body
