@@ -90,7 +90,7 @@ def main(current_dir=""):
                     del mapping["iperf4"]
                 if "stream" in mapping:
                     del mapping["stream"]
-            print(mapping)
+                print(mapping)
             result = driver_post_processing.process(sub_dir, start_pos, end_pos, mapping)
             print(result)
             if header_written==False:
@@ -105,4 +105,7 @@ def main(current_dir=""):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    dir_name = '../data/' 
+    if len(sys.argv) > 2:
+        dir_name = sys.argv[1] 
+    main(dir_name)
