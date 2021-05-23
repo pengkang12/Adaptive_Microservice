@@ -106,6 +106,6 @@ def main(current_dir=""):
 
 if __name__ == "__main__":
     dir_name = '../data/' 
-    if len(sys.argv) > 2:
+    if len(sys.argv) > 1:
         dir_name = sys.argv[1] 
     main(dir_name)

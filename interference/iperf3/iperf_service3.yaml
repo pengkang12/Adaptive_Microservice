@@ -1,0 +1,11 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: iperf3
+spec:
+  selector:
+    app: iperf3
+  ports:
+  - protocol: TCP
+    port: 5201
+    targetPort: 5201

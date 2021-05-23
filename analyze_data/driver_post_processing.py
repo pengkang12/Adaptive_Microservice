@@ -50,7 +50,10 @@ def get_latency(dir_name):
                     result[name] += row95*request_count
                     count[name] += request_count
     for key in result.keys():
-        result[key] /= count[key]
+        if count[key]:
+            result[key] /= count[key]
+        else:
+            result[key] = 'N/A'
     return result
 
 '''

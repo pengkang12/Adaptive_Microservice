@@ -1,0 +1,22 @@
+apiVersion: apps/v1 # docker run  -it --rm --name=iperf3-server -p 5201:5201 networkstatic/iperf3 -s
+kind: Deployment
+metadata:
+  name: iperf-deployment3
+  labels:
+    app: iperf3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iperf3
+  template:
+    metadata:
+      labels:
+        app: iperf3
+    spec:
+      containers:
+      - name: iperf-server3
+        image: networkstatic/iperf3:latest
+        ports: 
+        - containerPort: 5201
+        args: ["-s"]

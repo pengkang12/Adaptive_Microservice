@@ -11,7 +11,7 @@ echo "promethues "$PROMETHEUS_URL
 
 prometheusName=`kubectl get pod -n monitoring | grep operator | awk '{print $1}'`
 
-python3.6 collecting_data/testRun.py -f produce_input_data/inputTest.txt -pName $prometheusName -k8url $web_url:$web_port -locustF load-gen/robot-shop.py > /tmp/result.log
+python3.6 collecting_data/testRun.py -f produce_input_data/inputTest.txt -pName $prometheusName -k8url $web_url:$web_port -locustF load-gen/robot-shop.py > /tmp/result.log &
 
 #python3.6 dockerRun.py -f input_data/inputTest.txt -pName prometheus-operator-685cb6b46b-l6hrd -k8url $web_url:$web_port -locustF load-gen/robot-shop.py >> /tmp/result.log &
 #python3.6 scale_kube.py -f input_data/inputTest.txt -pName prometheus-operator-685cb6b46b-l6hrd -k8url $web_url:$web_port -locustF robot-shop.py >> /tmp/scale.log &

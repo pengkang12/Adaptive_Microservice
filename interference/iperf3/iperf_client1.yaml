@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: iperf1
+spec:
+  parallelism: 1
+  completions: 2
+  template:
+    metadata:
+      name: iperf-client1
+    spec:
+      containers:
+      - name: iperf-client-container1
+        image: networkstatic/iperf3
+        args: ["-c" , "10.98.131.18", "-n", "80G"]
+      restartPolicy: Never
+      nodeSelector: 
+        color: red

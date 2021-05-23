@@ -41,7 +41,9 @@ output_file = "default_test_case.csv"
 zones = ['red', 'green','blue', 'yellow']
 
 interference_level = ['low','medium','high']
-interference_type = ['stream']
+#interference_type = ['stream', 'iperf']
+interference_type = ['iperf']
+
 
 connections  = []
 for i in range(5,40,10):
