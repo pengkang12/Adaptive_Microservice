@@ -80,6 +80,14 @@ def main(current_dir=""):
                 mapping = container_mapping.read_container_host_mapping(sub_dir, mapFile)  #TODO: mapFile shall be local for each directory 
                 if "iperf" in mapping:
                     del mapping["iperf"] 
+                if "iperf1" in mapping:
+                    del mapping["iperf1"]
+                if "iperf2" in mapping:
+                    del mapping["iperf2"]
+                if "iperf3" in mapping:
+                    del mapping["iperf3"]
+                if "iperf4" in mapping:
+                    del mapping["iperf4"]
                 if "stream" in mapping:
                     del mapping["stream"]
             print(mapping)

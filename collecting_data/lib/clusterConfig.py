@@ -11,18 +11,27 @@ class ClusterInfo(object):
     interferenceZone = ""
     interferenceLvl = 0
     interferenceCompletionCount = 0
+    # interference type includes stream, iperf, and another 
     interferenceType = "stream"
 
 
 def deletebatchJobs(batch_api,configs):
-    name = configs.interferenceType
     namespace = configs.testNS
-
-    try: 
-        api_response = batch_api.delete_namespaced_job(name, namespace, pretty='true', grace_period_seconds=2, propagation_policy='Background')
-        pprint(api_response)
-    except ApiException as e:
-        print("Exception when calling BatchV1Api->delete_namespaced_job: %s\n" % e)
+    name = configs.interferenceType
+    if name == "stream":   
+        try: 
+            api_response = batch_api.delete_namespaced_job(name, namespace, pretty='true', grace_period_seconds=2, propagation_policy='Background')
+            pprint(api_response)
+        except ApiException as e:
+            print("Exception when calling BatchV1Api->delete_namespaced_job: %s\n" % e)
+    elif name == "iperf":
+        for i in range(1, configs.interferenceLvl+1):
+            name = configs.interferenceType + str(i)
+            try:
+                api_response = batch_api.delete_namespaced_job(name, namespace, pretty='true', grace_period_seconds=2, propagation_policy='Background')
+                pprint(api_response)
+            except ApiException as e:
+                print("Exception when calling BatchV1Api->delete_namespaced_job: %s\n" % e)
 
 
 def clusterSetup(api_instance, batch_api, configs):
@@ -71,34 +80,41 @@ def clusterSetup(api_instance, batch_api, configs):
     namespace=configs.testNS 
     pretty = 'true' # str | If 'true', then the output is pretty printed. (optional)
     if configs.interferenceLvl > 0:
-        body = load_yaml_job_spec(10, configs.interferenceLvl,configs.interferenceZone, configs.interferenceType)
-        print(body)
-        try: 
-            api_response = batch_api.create_namespaced_job(namespace=namespace, body=body, pretty=pretty)
-            pprint(api_response)
-        except ApiException as e:
-            print("Exception when calling BatchV1Api->create_namespaced_job: %s\n" % e)
-
+        create_interf_count = 1
+        if configs.interferenceType == 'iperf':
+            create_interf_count = configs.interferenceLvl 
+        for i in range(1, create_interf_count + 1):
+            # for each iperf's server, only can receive one client each time.
+            cntParallelism = i
+            if configs.interferenceType == "stream":
+                cntParallelism = configs.interferenceLvl
+            body = load_yaml_job_spec(10, cntParallelism, configs.interferenceZone, configs.interferenceType)
+            print(body)
+            try: 
+                api_response = batch_api.create_namespaced_job(namespace=namespace, body=body, pretty=pretty)
+                pprint(api_response)
+            except ApiException as e:
+                print("Exception when calling BatchV1Api->create_namespaced_job: %s\n" % e)
 
 
 def load_yaml_job_spec(cntCompletions=10,cntParallelism=2,zone="red",jobType="stream"):
     body = None
     print(jobType)
+    filename = 'interference/stream.yaml'
     if jobType == "stream" or "":
-        with open('interference/stream.yaml','r') as f:
-            body = yaml.load(f, yaml.FullLoader) 
-            pprint(body)
-    if body != None:    
-        '''
-        body.spec.parallelism = cntParallelism
-        body.spec.completions = cntCompletions
-        zoneSelector  = {}
-        zoneSelector['color'] = zone
-        body.spec.template.spec.node_selector = zoneSelector
-        '''
+        pass 
+    elif jobType == 'iperf':
+        filename = "interference/iperf3/iperf_client"+str(cntParallelism)+".yaml"
+
+    with open(filename, 'r') as f:
+        body = yaml.load(f, yaml.FullLoader)
+        pprint(body)
+
+    if body != None:   
+        if jobType == 'iperf':
+            cntParallelism = 1 
         body['spec']['parallelism'] = int(cntParallelism)
         body['spec']['completions'] = int(cntCompletions)
         body['spec']['template']['spec']['nodeSelector']['color'] = zone 
         
-
     return body 

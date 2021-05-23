@@ -113,7 +113,7 @@ def promQueries(startTime, stopTime, testDirPath):
     timestampList = [] # List of scraped timestamps
     podNameList = [] # List of scraped pods
     tmp_pod = []
-    print("cpu5s, ", cpu5s)
+    #print("cpu5s, ", cpu5s)
     # Create list of podDataCollection objects, with CPU vals:
     for pod in cpu5s['data']['result']:
         p = podDataCollection(pod['metric']['pod'])
@@ -122,7 +122,7 @@ def promQueries(startTime, stopTime, testDirPath):
         podMetricsDict[p.podName] = p
         if not tmp_pod:
             tmp_pod = pod['values'] 
-    print("tmp_pdo", tmp_pod) 
+    #print("tmp_pdo", tmp_pod) 
     for tStamp, val in tmp_pod:
         timestampList.append(tStamp)
 
