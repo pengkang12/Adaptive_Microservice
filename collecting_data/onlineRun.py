@@ -36,7 +36,9 @@ def testDirInit(expName):
     return testDirStr
 
 def extractData(testDirPath):
-    cmdString = "python3.6 extract_data/driver_main.py"
+    os.chdir("extract_data")
+ 
+    cmdString = "python3.6 driver_main.py"
 
     cmdArgs = shlex.split(cmdString)
     cmdResultFNm = testDirPath + "/extractLog.txt"
@@ -85,7 +87,7 @@ def main():
     for i in range(1, 2):
         print("Current running experiment: %s\n" % exp_Nm)
 
-        collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po)
+        #collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po)
 
         # extracted_data
         extractData(testDirPath)
