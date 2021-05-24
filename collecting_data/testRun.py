@@ -38,6 +38,9 @@ class podDataCollection(object):
 
     
 def testDirInit(expName):
+    currentDir = os.getcwd()
+    os.chdir("..")
+    # go to previous directory
     workingDir = os.getcwd()
     testDirStr = os.path.join(workingDir, 'data')
     testDirStr = os.path.join(testDirStr, expName)
@@ -45,6 +48,64 @@ def testDirInit(expName):
         os.makedirs(testDirStr)
     return testDirStr
 
+def collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po):
+    # build locust command to run locust
+    locustCmd = "locust --host http://" + k8url + " -f " + locustF + " -u " + clientCnt + " -t " + locustDur + " --headless --print-stats --csv=locust "
+
+    locustArgs = shlex.split(locustCmd)
+    print("locust Command: %s\n" % locustCmd)
+    print("locust CMD args: %s\n" % locustArgs)
+    # TODO: Later: confirm cluster is setup properly
+
+    # Get time-stamp before running test
+    print("Test %s start\n" % exp_Nm)
+
+    # TODO: add perfstat shell cmd in 
+    # Exec perfstat using params passed in through testParam file
+    # #format: python <script_name> exp_name total_duration output_dir
+
+    perfstatCmdString = "python3.6 collecting_data/perfstat_driver.py {} {} {}".format(exp_Nm,runtime,testDirPath)
+
+    perfstatArgs = shlex.split(perfstatCmdString)
+    perfstatResultFNm = testDirPath + "/perfstatLog.txt"
+    with open(perfstatResultFNm, 'w+') as perfstat_f:
+        p1 = subprocess.Popen(perfstatArgs, stdout=perfstat_f, stderr=perfstat_f, shell=False)
+    
+    print("Started Perfstat {0}".format(perfstatCmdString))        
+    # Exec vmstat using params passed
+    vmstatCmdString = "python3.6 collecting_data/vmstat_driver.py {} {} {} {} {}".format(exp_Nm,runtime,testDirPath,start_po,end_po)
+
+    vmstatArgs = shlex.split(vmstatCmdString)
+    vmstatResultFNm = testDirPath + "/vmstatLog.txt"
+    with open(vmstatResultFNm, 'w+') as vmstat_f:
+        p2 = subprocess.Popen(vmstatArgs, stdout=vmstat_f, stderr=vmstat_f, shell=False)
+
+    print("Started VMStat: {0}".format(vmstatCmdString))
+    print("[debug] start time {}".format(datetime.datetime.now()))
+
+    startT = time.time() 
+    
+    startT2 = datetime.datetime.now()        
+    # Exec locust command, exporting to CSV file & using params passed in through testParam file
+    locustResultFNm = testDirPath + "/LocustLog.txt"
+    with open(locustResultFNm, 'w+') as locust_f:
+        p = subprocess.call(locustArgs, stdout=locust_f, stderr=locust_f, shell=False)
+    
+    # Once locust command finishes, get end timestamp
+    stopT = time.time()
+    stopT2 = datetime.datetime.now()
+    print ("[debug] test is completed. post processing")
+
+    moveLocustResults(testDirPath)
+    
+    # Exec Prometheus API query(s) to gather metrics & build resulting csv files
+    time.sleep(30)        
+    promQueries(int(startT), int(stopT), testDirPath)
+    
+    # Exec command to save pod mapping information
+    cmd = "kubectl get pod -o wide -n robot-shop | awk '{print $1, $7}' > "+testDirPath+"/container_node_mapping.csv"
+    os.system(cmd)       
+    return (int(runtime) - int(stopT-startT) ) + 10
 
 def main():
     #construct & parse args
@@ -69,6 +130,9 @@ def main():
     interference_level['low'] = 1
     interference_level['medium'] = 2
     interference_level['high'] = 3 
+    
+    k8url = args['k8url']
+    locustF = args['locustF']    
 
     # -------- Main testing loop Start ----------
     for line in open(args["file"]):
@@ -100,79 +164,14 @@ def main():
         print("5 second grace period\n")
         time.sleep(20)
 
-        # build locust command to run locust
-        locustCmd = "locust --host http://" + args["k8url"] + " -f " + args["locustF"] + " -u " + clientCnt + " -t " + locustDur + " --headless --print-stats --csv=locust "
-
-        locustArgs = shlex.split(locustCmd)
-        print("locust Command: %s\n" % locustCmd)
-        print("locust CMD args: %s\n" % locustArgs)
-        # TODO: Later: confirm cluster is setup properly
-
-        # Get time-stamp before running test
-        print("Test %s start\n" % exp_Nm)
-
-        # TODO: add perfstat shell cmd in 
-        # Exec perfstat using params passed in through testParam file
-        # #format: python <script_name> exp_name total_duration output_dir
-
-        perfstatCmdString = "python3.6 collecting_data/perfstat_driver.py {} {} {}".format(exp_Nm,runtime,testDirPath)
-
-        perfstatArgs = shlex.split(perfstatCmdString)
-        perfstatResultFNm = testDirPath + "/perfstatLog.txt"
-        with open(perfstatResultFNm, 'w+') as perfstat_f:
-            p1 = subprocess.Popen(perfstatArgs, stdout=perfstat_f, stderr=perfstat_f, shell=False)
-        
-        print("Started Perfstat {0}".format(perfstatCmdString))        
-        # Exec vmstat using params passed
-        vmstatCmdString = "python3.6 collecting_data/vmstat_driver.py {} {} {} {} {}".format(exp_Nm,runtime,testDirPath,start_po,end_po)
-
-        vmstatArgs = shlex.split(vmstatCmdString)
-        vmstatResultFNm = testDirPath + "/vmstatLog.txt"
-        with open(vmstatResultFNm, 'w+') as vmstat_f:
-            p2 = subprocess.Popen(vmstatArgs, stdout=vmstat_f, stderr=vmstat_f, shell=False)
-
-        print("Started VMStat: {0}".format(vmstatCmdString))
-        print("[debug] start time {}".format(datetime.datetime.now()))
-
-        startT = time.time() 
-	
-        startT2 = datetime.datetime.now()        
-        # Exec locust command, exporting to CSV file & using params passed in through testParam file
-        locustResultFNm = testDirPath + "/LocustLog.txt"
-        with open(locustResultFNm, 'w+') as locust_f:
-            p = subprocess.call(locustArgs, stdout=locust_f, stderr=locust_f, shell=False)
-        
-        # Once locust command finishes, get end timestamp
-        stopT = time.time()
-        stopT2 = datetime.datetime.now()
-        print ("[debug] test is completed. post processing")
-
-
-        # delete the batch jobs 
-        if clusterConfs.interferenceLvl > 0:
-            deletebatchJobs(batch_v1beta1,clusterConfs)
-	   # delStr = "kubectl delete pod -l job-name=stream"
-    	  #  jobDelArgs = shlex.split(delStr)
-         #   print("deleting job pods")
-	#    p5 = subprocess.call(jobDelArgs, shell=False)
-        moveLocustResults(testDirPath)
-        
-        # Exec Prometheus API query(s) to gather metrics & build resulting csv files
-        time.sleep(30)        
-        promQueries(int(startT), int(stopT), testDirPath)
-        
-        # Exec command to save pod mapping information
-        cmd = "kubectl get pod -o wide -n robot-shop | awk '{print $1, $7}' > "+testDirPath+"/container_node_mapping.csv"
-        os.system(cmd)       
- 
-        additional_runtime = (int(runtime) - int(stopT-startT) ) + 10
+        additional_runtime = collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po)
         print ("[debug] sleeping for additional {} sec".format(additional_runtime))
         if additional_runtime > 0:
             time.sleep(additional_runtime)
         print("[debug] end time {}".format(datetime.datetime.now()))
         print ("[debug] End of Test")
 
-
-main()
+if __name__ == '__main__':
+    main()
 
 

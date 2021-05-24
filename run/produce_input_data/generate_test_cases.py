@@ -27,7 +27,7 @@ def getClusterConfiguration(cntCart=1,cntCatalogue=1,cntShipping=1,cntPayment=1,
 
 def getConfigHash(pods):
     result = 0
-    for k in sorted(pods):
+    for k in sorted(pods.keys()):
         result *= 10
         result += pods[k]
     
@@ -58,22 +58,18 @@ for pod in workflow:
 # variables - zone, interference_level, connection
 with open(output_file,'a' )as f:
     f.write("#test_id/duration/rate/con/zone/i_level/{configuration}/start_position/end_position\n")
-    for cnt in range(1, 4):
-        for pod in workflow:
-            paramCnt[pod] = cnt
-            if pod in ["cart", "catalogue"] and cnt > 1:
-                continue 
+    for work in ["cart", "catalogue", "ratings", "user", "shipping", "payment"]:
+        for cnt in [1, 2, 3]:
+            paramCnt[work] = cnt
             for zone in zones:
                 for i_type in interference_type:
                     for i_level in interference_level:
                         for con in connections:
-                            rate = 1
                             today = date.today()
                             date_prefix = today.strftime("%b%d")
-                            configuration = getClusterConfiguration(cntCart = paramCnt["cart"], cntCatalogue = paramCnt["catalogue"], 
-                                cntPayment = paramCnt["payment"], cntRatings = paramCnt["ratings"], cntShipping = paramCnt["shipping"]
-                            )
-                            test_id = "{}_{}_{}_{}_{}_{}".format(date_prefix,zone,con, i_type, i_level, getConfigHash(configuration) )
-                            data = "{}/{}/{}/{}/{}/{}/{}/{}/{}\n".format(test_id,duration,i_type,con,zone,i_level,configuration,start_position,end_position)
-                            f.write(data)
+                            configuration = getClusterConfiguration(cntCart = paramCnt["cart"], cntCatalogue = paramCnt["catalogue"], cntShipping = paramCnt["shipping"],
+                            cntPayment = paramCnt["payment"], cntRatings = paramCnt["ratings"], cntUser=paramCnt["user"])
 
+                            test_id = "{}_{}_{}_{}_{}_{}".format(date_prefix,zone,con, i_type, i_level, getConfigHash(configuration) )
+                            data = "{}/{}/{}/{}/{}/{}/{}/{}/{}\n".format(test_id,duration,i_type,con,zone,i_level,configuration,start_position,end_position)                             
+                            f.write(data)
