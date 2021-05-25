@@ -13,40 +13,18 @@ from kubernetes import client, config
 import json
 import csv
 import yaml
-import datetime
 import ast 
 
-from lib.clusterConfig import clusterSetup, deletebatchJobs, ClusterInfo
-from lib.kube_config import populateClusterConfig 
+from lib.clusterConfig import clusterSetup, deletebatchJobs, ClusterInfo, populateClusterConfig 
 from lib.prom import promQueries
 from lib.locust_basic import moveLocustResults
+from lib.basic import testDirInit
 
 
+data_dir = "training_data"
 #TODO: Add ability to place interference pods on specific nodes in cluster
 #TODO: Add ability to scale different number of pods for each micro-service
 #TODO: Figure out strategy for pod isolation on nodes when applying interference to those specific pod(s)
-class podDataCollection(object):
-    podName = ""
-    cpu5s = []
-    memW5s = []
-    memR5s = []
-    netW5s = []
-    netR5s = []
-
-    def __init__(self, name):
-        self.podName = name
-
-    
-def testDirInit(expName):
-    currentDir = os.getcwd()
-    os.chdir("..")
-    # go to previous directory
-    workingDir = os.getcwd()
-    testDirStr = os.path.join(workingDir, 'data')
-    testDirStr = os.path.join(testDirStr, expName)
-    if not os.path.exists(testDirStr):
-        os.makedirs(testDirStr)
-    return testDirStr
 
 def collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po):
     # build locust command to run locust
@@ -134,6 +112,7 @@ def main():
     k8url = args['k8url']
     locustF = args['locustF']    
 
+    os.chdir("..")
     # -------- Main testing loop Start ----------
     for line in open(args["file"]):
         if line.startswith("#"):
@@ -146,6 +125,7 @@ def main():
         runtime = lnArgs[1]
         clientCnt = lnArgs[3]
 
+        testDirPath = testDirInit(exp_Nm, data_dir) #Create current test's directory
         clusterConfs.interferenceType = lnArgs[2]   
         clusterConfs.interferenceZone = lnArgs[4]
         clusterConfs.interferenceLvl = interference_level[lnArgs[5]]
@@ -155,7 +135,6 @@ def main():
         end_po = lnArgs[8]
         # add more var defs here ^ if more args get added to lines (like node color interference is on)
         print("Current running experiment: %s\n" % exp_Nm)
-        testDirPath = testDirInit(exp_Nm) #Create current test's directory
         locustDur = runtime + "s"
         
         # setup cluster using input params
@@ -165,11 +144,11 @@ def main():
         time.sleep(20)
 
         additional_runtime = collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po)
-        print ("[debug] sleeping for additional {} sec".format(additional_runtime))
+        print("[debug] sleeping for additional {} sec".format(additional_runtime))
         if additional_runtime > 0:
             time.sleep(additional_runtime)
         print("[debug] end time {}".format(datetime.datetime.now()))
-        print ("[debug] End of Test")
+        print("[debug] End of Test")
 
 if __name__ == '__main__':
     main()

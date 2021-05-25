@@ -10,35 +10,26 @@ from  prometheus_http_client import Prometheus
 from kubernetes import client, config
 import json
 import csv
-import yaml
-import datetime
 import ast 
 
-from lib.clusterConfig import clusterSetup, deletebatchJobs, ClusterInfo
-from lib.kube_config import populateClusterConfig #, workflowScaling
+from lib.clusterConfig import clusterSetup, deletebatchJobs, ClusterInfo, workflowScale, populateClusterConfig
 from lib.prom import promQueries
 from lib.locust_basic import moveLocustResults
 from testRun import collectData
+from lib.basic import testDirInit
 
 #TODO: Add ability to place interference pods on specific nodes in cluster
 #TODO: Add ability to scale different number of pods for each micro-service
 #TODO: Figure out strategy for pod isolation on nodes when applying interference to those specific pod(s)
-    
-def testDirInit(expName):
-    currentDir = os.getcwd()
-    os.chdir("..")
-    # go to previous directory
-    workingDir = os.getcwd()
-    testDirStr = os.path.join(workingDir, 'data')
-    testDirStr = os.path.join(testDirStr, expName)
-    if not os.path.exists(testDirStr):
-        os.makedirs(testDirStr)
-    return testDirStr
+   
+
+data_dir = "online_data"
+
 
 def extractData(testDirPath):
     os.chdir("extract_data")
  
-    cmdString = "python3.6 driver_main.py"
+    cmdString = "python3.6 driver_main.py ../{0}/".format(data_dir)
 
     cmdArgs = shlex.split(cmdString)
     cmdResultFNm = testDirPath + "/extractLog.txt"
@@ -46,11 +37,25 @@ def extractData(testDirPath):
         p2 = subprocess.Popen(cmdArgs, stdout=cmd_f, stderr=cmd_f, shell=False)
 
     print("Started cmd: {0}".format(cmdString))
+    os.chdir("..")
+    # store old data
 
-def onlineScaling(clusterConfs, workflow):
+def onlineScaling(apps_instance, clusterConfs, workflow):
     populateClusterConfig(clusterConfs, workflow)
-    #workflowScale(clusterConfs)
- 
+    workflowScale(apps_instance, clusterConfs)
+
+def onlineInference():
+    # read data from bigtable.csv
+    current_data = []
+    with open('{}/bigtable.csv'.format(data_dir)) as bigtable_file:
+        csv_reader = csv.reader(bigtable_file, delimiter=',')
+        line_count = 0
+        for row in csv_reader:
+            current_data.append(row)
+    print(current_data)
+    os.system("tail -n 1 {0}/bigtable.csv >> {0}/bigtable_history.csv".format(data_dir))
+    return current_data
+
 def main():
     #construct & parse args
     ap = argparse.ArgumentParser()
@@ -69,7 +74,6 @@ def main():
     #kubernetes setup
     config.load_kube_config()
     apps_v1 = client.AppsV1Api()
-    batch_v1beta1 = client.BatchV1Api()
 
     clusterConfs = ClusterInfo()
 
@@ -77,14 +81,20 @@ def main():
     runtime = "60"
     clientCnt = "10"
     locustDur = runtime + "s"
-    exp_Nm = "online_training_real_time_data"
-    testDirPath = testDirInit(exp_Nm) #Create current test's directory
+    
     # sampling interval from 5 seconds to 35 seconds
     start_po = "5"
     end_po = "35"
- 
+    
+    # return to previous directory 
+    os.chdir("..")
     # -------- Main testing loop Start ----------
-    for i in range(1, 2):
+    for i in range(1, 5):
+        now = datetime.datetime.now()
+        current_time = now.strftime("%m-%d-%H-%M")
+        exp_Nm = "{0}".format(current_time)
+        testDirPath = testDirInit(exp_Nm, data_dir) #Create current test's directory
+ 
         print("Current running experiment: %s\n" % exp_Nm)
 
         #collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po)
@@ -93,9 +103,9 @@ def main():
         extractData(testDirPath)
  
         # online inference 
-        workflow = None
+        workflow = {'cart': 1, 'ratings': 1, 'shipping': 1, 'catalogue': 1, 'user': 1, 'payment': 1}
         # workflow = online_inference()
-        
+        onlineInference() 
         # add on: if ML's model doesn't work. We request another big machine to re-train model again using our history data. 
         # then we download new model and inference at next time.
         if workflow == None:
@@ -103,7 +113,7 @@ def main():
             pass
         else: 
             # online scaling
-            onlineScaling(clusterConfs, workflow)
+            onlineScaling(apps_v1, clusterConfs, workflow)
             pass
  
         additional_runtime = 10
@@ -112,7 +122,7 @@ def main():
             time.sleep(additional_runtime)
         print("[debug] end time {}".format(datetime.datetime.now()))
         print ("[debug] End of Test")
-
+        # update exp_Nm, because pod has a new name.
 
 main()
 

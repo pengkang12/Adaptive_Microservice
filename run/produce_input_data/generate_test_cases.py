@@ -12,7 +12,7 @@ import hashlib
 duration = 60 #sec
 
 
-def getClusterConfiguration(cntCart=1,cntCatalogue=1,cntShipping=1,cntPayment=1,cntRatings=1,cntUser=1,cntWeb=1):
+def getClusterConfiguration(cntCart=1,cntCatalogue=1,cntShipping=1,cntPayment=1,cntRatings=1,cntUser=1):
     pods = {}
     pods['cart'] = cntCart
     pods['catalogue'] = cntCatalogue
@@ -20,7 +20,7 @@ def getClusterConfiguration(cntCart=1,cntCatalogue=1,cntShipping=1,cntPayment=1,
     pods['payment'] = cntPayment
     pods['ratings'] = cntRatings
     pods['user'] = cntUser
-    pods['web'] = cntWeb
+    #pods['web'] = cntWeb
 
 
     return pods
@@ -45,9 +45,6 @@ interference_type = ['stream', 'iperf']
 #interference_type = ['iperf']
 
 
-connections  = []
-for i in range(5,40,10):
-    connections.append(i)
 connections = [20, 25]
 
 workflow = ["cart", "catalogue", "ratings", "user", "shipping", "payment"]
@@ -55,12 +52,17 @@ workflow = ["cart", "catalogue", "ratings", "user", "shipping", "payment"]
 paramCnt = {}
 for pod in workflow:
     paramCnt[pod] = 1
+paramCnt['cart'] = 0
 # variables - zone, interference_level, connection
+
 with open(output_file,'a' )as f:
     f.write("#test_id/duration/rate/con/zone/i_level/{configuration}/start_position/end_position\n")
     for work in ["cart", "catalogue", "ratings", "user", "shipping", "payment"]:
         for cnt in [1, 2, 3]:
-            paramCnt[work] = cnt
+            paramCnt[work] += 1
+            if paramCnt[work] == 4:
+                paramCnt[work] = 3
+                continue 
             for zone in zones:
                 for i_type in interference_type:
                     for i_level in interference_level:

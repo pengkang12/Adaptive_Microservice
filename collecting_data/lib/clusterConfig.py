@@ -3,6 +3,7 @@ from kubernetes.client.rest import ApiException
 from pprint import pprint
 import time
 import yaml 
+import os
 
 # TODO: move static config of this object to a conf file so it isn't hard coded    
 class ClusterInfo(object):
@@ -14,6 +15,11 @@ class ClusterInfo(object):
     # interference type includes stream, iperf, and another 
     interferenceType = "stream"
 
+def populateClusterConfig(clusterObject, configDict):
+    #workflowDeplList = {"cart": 0, "catalogue": 0,"shipping":0, "payment":0,"ratings":0,"user":0,"web":0}
+
+    for key in configDict:
+        clusterObject.workflowDeplList[key] = configDict[key]
 
 def deletebatchJobs(batch_api,configs):
     namespace = configs.testNS
@@ -33,8 +39,7 @@ def deletebatchJobs(batch_api,configs):
             except ApiException as e:
                 print("Exception when calling BatchV1Api->delete_namespaced_job: %s\n" % e)
 
-
-def clusterSetup(api_instance, batch_api, configs):
+def workflowScale(api_instance, configs):
     for deployment, replicaCnt in configs.workflowDeplList.items():
         # setup correct pod replica count for workflow deployments 
         try: 
@@ -76,6 +81,8 @@ def clusterSetup(api_instance, batch_api, configs):
             print("Exception when calling AppsV1Api->read_namespaced_deployment: %s\n" % e)
 
 
+def clusterSetup(api_instance, batch_api, configs):
+    workflowScale(api_instance, configs)
     # TODO: place interference deployment in correct zone w/ correct count
     namespace=configs.testNS 
     pretty = 'true' # str | If 'true', then the output is pretty printed. (optional)
@@ -100,11 +107,12 @@ def clusterSetup(api_instance, batch_api, configs):
 def load_yaml_job_spec(cntCompletions=10,cntParallelism=2,zone="red",jobType="stream"):
     body = None
     print(jobType)
-    filename = 'interference/stream.yaml'
+    testDirPath = os.getcwd()
+    filename = testDirPath+ '/interference/stream.yaml'
     if jobType == "stream" or "":
         pass 
     elif jobType == 'iperf':
-        filename = "interference/iperf3/iperf_client"+str(cntParallelism)+".yaml"
+        filename = testDirPath+ "/interference/iperf3/iperf_client"+str(cntParallelism)+".yaml"
 
     with open(filename, 'r') as f:
         body = yaml.load(f, yaml.FullLoader)
