@@ -140,8 +140,8 @@ def main():
         # setup cluster using input params
         print("Configuring cluster to match experiment input, %s\n" %clusterConfs)
         clusterSetup(apps_v1, batch_v1beta1, clusterConfs)
-        print("5 second grace period\n")
-        time.sleep(20)
+        print("1 minute grace period\n")
+        time.sleep(60)
 
         additional_runtime = collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po)
         print("[debug] sleeping for additional {} sec".format(additional_runtime))

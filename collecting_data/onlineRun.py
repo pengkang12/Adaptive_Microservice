@@ -47,7 +47,7 @@ def onlineScaling(apps_instance, clusterConfs, workflow):
 def onlineInference():
     # read data from bigtable.csv
     current_data = []
-    with open('{}/bigtable.csv'.format(data_dir)) as bigtable_file:
+    with open(os.getcwd()+'/{}/bigtable.csv'.format(data_dir)) as bigtable_file:
         csv_reader = csv.reader(bigtable_file, delimiter=',')
         line_count = 0
         for row in csv_reader:
@@ -106,7 +106,7 @@ def main():
         extractData(testDirPath)
  
         # online inference 
-        workflow = {'cart': 1, 'ratings': 1, 'shipping': 1, 'catalogue': 1, 'user': 1, 'payment': 1}
+        workflow = {'cart': 1, 'ratings': 1, 'shipping': 1, 'catalogue': 1, 'user': 1, 'payment': 1, 'web': 1}
         # workflow = online_inference()
         onlineInference() 
         # add on: if ML's model doesn't work. We request another big machine to re-train model again using our history data. 
