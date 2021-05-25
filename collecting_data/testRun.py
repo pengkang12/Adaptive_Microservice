@@ -76,13 +76,13 @@ def collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPa
 
     moveLocustResults(testDirPath)
     
+    time.sleep(15)
+    cmd = "kubectl get pod -o wide -n robot-shop | awk '{print $1, $7}' > "+testDirPath+"/container_node_mapping.csv &"
+    os.system(cmd)     
     # Exec Prometheus API query(s) to gather metrics & build resulting csv files
-    time.sleep(30)        
+    time.sleep(15)        
     promQueries(int(startT), int(stopT), testDirPath)
-    
-    # Exec command to save pod mapping information
-    cmd = "kubectl get pod -o wide -n robot-shop | awk '{print $1, $7}' > "+testDirPath+"/container_node_mapping.csv"
-    os.system(cmd)       
+     
     return (int(runtime) - int(stopT-startT) ) + 10
 
 def main():

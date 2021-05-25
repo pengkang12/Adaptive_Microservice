@@ -97,8 +97,11 @@ def main():
  
         print("Current running experiment: %s\n" % exp_Nm)
 
-        #collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po)
-
+        collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po) 
+        additional_runtime = 10
+        print ("[debug] sleeping for additional {} sec".format(additional_runtime))
+        if additional_runtime > 0:
+            time.sleep(additional_runtime)
         # extracted_data
         extractData(testDirPath)
  
@@ -116,13 +119,7 @@ def main():
             onlineScaling(apps_v1, clusterConfs, workflow)
             pass
  
-        additional_runtime = 10
-        print ("[debug] sleeping for additional {} sec".format(additional_runtime))
-        if additional_runtime > 0:
-            time.sleep(additional_runtime)
-        print("[debug] end time {}".format(datetime.datetime.now()))
-        print ("[debug] End of Test")
-        # update exp_Nm, because pod has a new name.
+       # update exp_Nm, because pod has a new name.
 
 main()
 
