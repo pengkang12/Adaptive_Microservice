@@ -8,7 +8,7 @@ import os
 # TODO: move static config of this object to a conf file so it isn't hard coded    
 class ClusterInfo(object):
     testNS = "robot-shop"
-    workflowDeplList = {"cart": 0, "catalogue": 0,"shipping":0, "payment":0,"ratings":0,"user":0,"web":0}
+    workflowDeplList = {"cart": 1, "catalogue": 1,"shipping":1, "payment":1,"ratings":1,"user":1,"web":1}
     interferenceZone = ""
     interferenceLvl = 0
     interferenceCompletionCount = 0
@@ -16,8 +16,6 @@ class ClusterInfo(object):
     interferenceType = "stream"
 
 def populateClusterConfig(clusterObject, configDict):
-    #workflowDeplList = {"cart": 0, "catalogue": 0,"shipping":0, "payment":0,"ratings":0,"user":0,"web":0}
-
     for key in configDict:
         clusterObject.workflowDeplList[key] = configDict[key]
 

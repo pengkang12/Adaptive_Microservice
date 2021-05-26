@@ -30,8 +30,17 @@ locust --host http://`kubectl get service -n robot-shop |grep web| awk '{print $
 
 # how to run program
 ```
-bash run.sh
+# online version
+cd run
+bash run_online.sh
 ```
+
+```
+# collectin training data 
+cd run
+bash run_offline.sh
+```
+
 
 # how to analyze data
 

@@ -11,5 +11,7 @@ echo "promethues "$PROMETHEUS_URL
 
 prometheusName=`kubectl get pod -n monitoring | grep operator | awk '{print $1}'`
 
+sleep 460
+
 python3.6 ../collecting_data/testRun.py -f run/produce_input_data/inputTest.txt -pName $prometheusName -k8url $web_url:$web_port -locustF load-gen/robot-shop.py >> /tmp/result.log &
 

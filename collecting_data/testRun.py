@@ -144,6 +144,10 @@ def main():
         time.sleep(30)
 
         additional_runtime = collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po)
+        # delete the batch jobs 
+        if clusterConfs.interferenceLvl > 0:
+            deletebatchJobs(batch_v1beta1,clusterConfs)
+
         print("[debug] sleeping for additional {} sec".format(additional_runtime))
         if additional_runtime > 0:
             time.sleep(additional_runtime)

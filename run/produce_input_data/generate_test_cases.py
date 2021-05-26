@@ -57,7 +57,7 @@ paramCnt['cart'] = 0
 
 with open(output_file,'a' )as f:
     f.write("#test_id/duration/rate/con/zone/i_level/{configuration}/start_position/end_position\n")
-    for work in ["cart", "catalogue", "ratings", "user", "shipping", "payment"]:
+    for work in ["cart", "catalogue", "payment", "user","ratings"]:# "shipping"]:
         for cnt in [1, 2, 3]:
             paramCnt[work] += 1
             if paramCnt[work] == 4:
