@@ -213,7 +213,7 @@ def get_container_metrics(dir_name,start_pos,end_pos, inputFileName, additional=
                 cnt += 1
 
             if total == 0:
-                ret[k] = "N/A"
+                ret[k] = "0"
             else:
                 # return avg of all pod avgs for specific deployment
                 ret[k] =  float(total/cnt)
@@ -276,14 +276,9 @@ def get_line_avg(inputs, start_i, end_i, additional=None):
             count += float(value)
             cnt += 1
     if cnt == 0:
-        return 'N/A'
+        return '0'
     return count/cnt
 
-
-def getHorizontalLine():
-    l = 80
-    result = "-"*l
-    return result 
 
 
 def get_average_vm_utilization(vm_cpu, node_list):

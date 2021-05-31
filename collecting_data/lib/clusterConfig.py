@@ -39,7 +39,7 @@ def deletebatchJobs(batch_api,configs):
 
 def workflowScale(api_instance, configs):
     for deployment, replicaCnt in configs.workflowDeplList.items():
-        # setup correct pod replica count for workflow deployments 
+        # setup correct pod replica count for workflow deployments
         try: 
 
             print("namespace", configs.testNS, configs.workflowDeplList, deployment)

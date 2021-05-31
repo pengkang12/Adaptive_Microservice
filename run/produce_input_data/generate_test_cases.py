@@ -12,7 +12,7 @@ import hashlib
 duration = 60 #sec
 
 
-def getClusterConfiguration(cntCart=1,cntCatalogue=1,cntShipping=1,cntPayment=1,cntRatings=1,cntUser=1):
+def getClusterConfiguration(cntCart=1,cntCatalogue=1,cntShipping=3,cntPayment=1,cntRatings=2,cntUser=1, cntWeb=2):
     pods = {}
     pods['cart'] = cntCart
     pods['catalogue'] = cntCatalogue
@@ -20,7 +20,7 @@ def getClusterConfiguration(cntCart=1,cntCatalogue=1,cntShipping=1,cntPayment=1,
     pods['payment'] = cntPayment
     pods['ratings'] = cntRatings
     pods['user'] = cntUser
-    #pods['web'] = cntWeb
+    pods['web'] = cntWeb
 
 
     return pods
@@ -45,7 +45,7 @@ interference_type = ['stream', 'iperf']
 #interference_type = ['iperf']
 
 
-connections = [20, 25]
+connections = [15, 20, 25]
 
 workflow = ["cart", "catalogue", "ratings", "user", "shipping", "payment"]
 
@@ -53,11 +53,12 @@ paramCnt = {}
 for pod in workflow:
     paramCnt[pod] = 1
 paramCnt['cart'] = 0
+paramCnt['shipping'] = 2
 # variables - zone, interference_level, connection
 
 with open(output_file,'a' )as f:
     f.write("#test_id/duration/rate/con/zone/i_level/{configuration}/start_position/end_position\n")
-    for work in ["cart", "catalogue", "payment", "user","ratings"]:# "shipping"]:
+    for work in ["cart", "catalogue", "payment", "user"]:#"ratings", "shipping"]:
         for cnt in [1, 2, 3]:
             paramCnt[work] += 1
             if paramCnt[work] == 4:
@@ -70,7 +71,7 @@ with open(output_file,'a' )as f:
                             today = date.today()
                             date_prefix = today.strftime("%b%d")
                             configuration = getClusterConfiguration(cntCart = paramCnt["cart"], cntCatalogue = paramCnt["catalogue"], cntShipping = paramCnt["shipping"],
-                            cntPayment = paramCnt["payment"], cntRatings = paramCnt["ratings"], cntUser=paramCnt["user"])
+                            cntPayment = paramCnt["payment"], cntUser=paramCnt["user"])
 
                             test_id = "{}_{}_{}_{}_{}_{}".format(date_prefix,zone,con, i_type, i_level, getConfigHash(configuration) )
                             data = "{}/{}/{}/{}/{}/{}/{}/{}/{}\n".format(test_id,duration,i_type,con,zone,i_level,configuration,start_position,end_position)                             
