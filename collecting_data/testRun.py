@@ -140,8 +140,8 @@ def main():
         # setup cluster using input params
         print("Configuring cluster to match experiment input, %s\n" %clusterConfs)
         clusterSetup(apps_v1, batch_v1beta1, clusterConfs)
-        print("30 seconds grace period\n")
-        time.sleep(30)
+        print("10 seconds grace period\n")
+        time.sleep(15)
 
         additional_runtime = collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po)
         # delete the batch jobs 
