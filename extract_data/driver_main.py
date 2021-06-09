@@ -92,7 +92,7 @@ def main(current_dir=""):
                     del mapping["stream"]
                 print(mapping)
             result = driver_post_processing.process(sub_dir, start_pos, end_pos, mapping)
-            print(result)
+            #print(result)
             if header_written==False:
                 write_header(result,output_file)
                 header_written=True

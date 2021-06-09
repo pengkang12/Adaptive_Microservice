@@ -39,6 +39,7 @@ def extractData(testDirPath):
 
     print("Started cmd: {0}".format(cmdString))
     os.chdir("..")
+    time.sleep(5)
     # store old data
 
 def onlineScaling(apps_instance, clusterConfs, workflow):
@@ -53,8 +54,9 @@ def onlineInference(model_list):
         line_count = 0
         for row in csv_reader:
             current_data.append(row)
-    print(current_data)
-    os.system("tail -n 1 {0}/bigtable.csv >> {0}/bigtable_history.csv".format(data_dir))
+    # remember update thread number for current_data
+    print("cuurent data is ", current_data)
+    os.system("mv {0}/online_* /tmp/data/".format(data_dir))
     print(model_list) 
     return current_data
 
@@ -98,7 +100,7 @@ def main():
     for i in range(1, 5):
         now = datetime.datetime.now()
         current_time = now.strftime("%m-%d-%H-%M")
-        exp_Nm = "{0}".format(current_time)
+        exp_Nm = "online_color_1_none_none_{}".format(current_time)
         testDirPath = testDirInit(exp_Nm, data_dir) #Create current test's directory
  
         print("Current running experiment: %s\n" % exp_Nm)

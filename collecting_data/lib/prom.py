@@ -137,7 +137,7 @@ def promQueries(startTime, stopTime, testDirPath):
 
     for pod in netReadB5s['data']['result']:
         podMetricsDict[pod['metric']['pod']].netR5s = pod['values']
-    print(podMetricsDict)
+    #print(podMetricsDict)
 
     createRawCSVs(timestampList, podNameList, testDirPath, podMetricsDict)
 
