@@ -12,7 +12,7 @@ import hashlib
 duration = 60 #sec
 
 
-def getClusterConfiguration(cntCart=1,cntCatalogue=1,cntShipping=3,cntPayment=1,cntRatings=2,cntUser=1, cntWeb=2):
+def getClusterConfiguration(cntCart=1,cntCatalogue=1,cntShipping=1,cntPayment=1,cntRatings=2,cntUser=2, cntWeb=2):
     pods = {}
     pods['cart'] = cntCart
     pods['catalogue'] = cntCatalogue
@@ -45,7 +45,7 @@ interference_type = ['stream', 'iperf']
 #interference_type = ['iperf']
 
 
-connections = [15, 20, 25]
+connections = [10, 15, 20, 25]
 
 workflow = ["cart", "catalogue", "ratings", "user", "shipping", "payment"]
 
@@ -53,7 +53,7 @@ paramCnt = {}
 for pod in workflow:
     paramCnt[pod] = 1
 paramCnt['cart'] = 0
-paramCnt['shipping'] = 2
+paramCnt['shipping'] = 3
 # variables - zone, interference_level, connection
 
 with open(output_file,'a' )as f:

@@ -18,11 +18,10 @@ inputFile['containernetR'] = "container-netR5sRaw.csv"
 result = dict()
 workflow = ["web", "cart", "catalogue", "ratings", "user", "shipping", "payment"] 
  
-
 def get_latency(dir_name):
     count = dict() 
     for name in workflow:
-        result[name] = 0
+        result[name] = 'N/A'
         count[name] = 0
      
     file_name = os.path.join(dir_name, inputFile['locust_stats'])
@@ -31,27 +30,77 @@ def get_latency(dir_name):
     else:
         return 
     
-    #print(df)
     #"Name","# requests","50%","66%","75%","80%","90%","95%","98%","99%","100%"
     for index, row in df.iterrows():
         row95 = int(row['95%'])
         request_count = int(row['Request Count'])
-        print(row['Name'], int(row95), request_count) 
+        name = row['Name']
+        #print(row['Name'], int(row95), request_count) 
         if row95 == "N/A":
             pass
         elif '/' == row['Name']:
-            result['web'] = row95*request_count
-            count['web'] = request_count
+            count['web'] = max(row95, count['web'])
         else:
-            for name in workflow: 
-                if name in row['Name']:
-                    if name == 'shipping' and 'confirm' not in row['Name']:
-                        continue
-                    result[name] += row95*request_count
-                    count[name] += request_count
+            if "ratings/api/rate" in name:
+                count['ratings'] = max(row95, count['ratings'])
+            elif "payment" in name:
+                count['payment'] = max(row95, count['payment'])
+            elif "catalogue/categories" in name:
+                count['catalogue'] = max(row95, count['catalogue'])
+            elif "shipping/confirm" in name:
+                count['shipping'] = max(row95, count['shipping'])
+            elif "cart/cart/" in name:
+                count['cart'] = max(row95, count['cart'])
+            elif "/api/user" in name:
+                count['user'] = max(row95, count['user']) 
+
     for key in result.keys():
-        if count[key]:
-            result[key] /= count[key]
+        if count[key] > 0:
+            result[key] = count[key] 
+            #print(count[key], result[key])
+        else:
+            result[key] = 'N/A'
+    return result
+
+
+def get_latency1(dir_name):
+    count = dict() 
+    for name in workflow:
+        result[name] = 'N/A'
+        count[name] = []
+     
+    file_name = os.path.join(dir_name, inputFile['locust_stats'])
+    if os.path.isfile(file_name):
+        df = pd.read_csv(file_name)
+    else:
+        return 
+    
+    #"Name","# requests","50%","66%","75%","80%","90%","95%","98%","99%","100%"
+    for index, row in df.iterrows():
+        row95 = int(row['95%'])
+        request_count = int(row['Request Count'])
+        name = row['Name']
+        #print(row['Name'], int(row95), request_count) 
+        if row95 == "N/A":
+            pass
+        elif '/' == row['Name']:
+            count['web'] += [row95]*request_count
+        else:
+            if "ratings/api/rate" in name:
+                count['ratings'] += [row95] * request_count
+            elif "payment" in name:
+                count['payment'] += [row95] * request_count
+            elif "catalogue/categories" in name:
+                count['catalogue'] += [row95] * request_count
+            elif "shipping/confirm" in name:
+                count['shipping'] += [row95] * request_count
+            elif "cart/add/" in name:
+                count['cart'] += [row95] * request_count
+ 
+    for key in result.keys():
+        if len(count[key]) > 0:
+            result[key] = np.percentile(count[key], 95) 
+            #print(count[key], result[key])
         else:
             result[key] = 'N/A'
     return result
@@ -162,12 +211,15 @@ def get_dep_name(depdict, podName):
     for k in depdict.keys():
         if k in podName:
             if debug:
-                print("get_dep_name-| Podname: '{}' matches Service: '{}'".format(podName, k)) #debug
+                pass
+                #print("get_dep_name-| Podname: '{}' matches Service: '{}'".format(podName, k)) #debug
             return k
     return None
 
 # returns avg amount of  cpu util (per 5 seconds) (measured in seconds) per pod type
 def get_container_metrics(dir_name,start_pos,end_pos, inputFileName, additional=None):
+    start_pos = 1
+    end_pos = 13
     iresult = {}
     pod_name_list = ['cart', 'catalogue', 'dispatch', 'mongodb', 'mysql', 'payment', 
 			'rabbitmq', 'ratings', 'redis', 'shipping', 'user', 'web']
@@ -194,7 +246,8 @@ def get_container_metrics(dir_name,start_pos,end_pos, inputFileName, additional=
                 service_name = mapping.keys()
                 #print(data)
                 if data[0] not in service_name:
-                    print("pod is not in mapping {0}".format(data[0]))	
+                    #print("pod is not in mapping {0}".format(data[0]))	
+                    pass
                
                 pod = get_dep_name(iresult, data[0])
                 if pod:
@@ -272,7 +325,7 @@ def get_line_avg(inputs, start_i, end_i, additional=None):
     cnt = 0
     count = 0.0
     for i, value in enumerate(inputs):
-        if i >= len(inputs) - start_i and value not in ['0', '']:
+        if i >= start_i and value not in ['0', '']:
             count += float(value)
             cnt += 1
     if cnt == 0:
@@ -383,7 +436,6 @@ def process(dir_name,start_pos,end_pos,mapping):
     for service_name, node_name in mapping.items():
         if service_name == "NAME":
             continue
-        print("service & nodename debug:")
         #print(service_name) #debug
         #print(node_name) #debug
         if service_name not in result.keys():
@@ -403,7 +455,7 @@ def process(dir_name,start_pos,end_pos,mapping):
     for svc_name, node in mapping.items():
         if svc_name in container_cpu:
             result[svc_name]['cont_cpu5s_avg'] = container_cpu[svc_name]
-            print(svc_name, container_cpu[svc_name])
+            #print(svc_name, container_cpu[svc_name])
         if svc_name in container_memW:
             result[svc_name]['cont_memW5s_avg'] = container_memW[svc_name]
         if svc_name in container_memR:
@@ -413,7 +465,7 @@ def process(dir_name,start_pos,end_pos,mapping):
         if svc_name in container_netR:
             result[svc_name]['cont_netR5s_avg'] = container_netR[svc_name]
 
-    print("latency_for_each, ", latency)
+    #print("latency_for_each, ", latency)
 
     print("\nresult struct:") #debug   
     #print(result) #debug

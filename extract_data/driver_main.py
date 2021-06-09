@@ -57,8 +57,8 @@ def main(current_dir=""):
     else:
         current_dir = os.path.abspath(current_dir)
     
-    start_pos = 1
-    end_pos = 60
+    start_pos = 5
+    end_pos = 35
     output_file = "bigtable.csv"
     output_file = os.path.join(current_dir,output_file)
     mapFile = "container_node_mapping.csv"

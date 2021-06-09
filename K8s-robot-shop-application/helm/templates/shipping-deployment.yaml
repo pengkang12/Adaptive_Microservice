@@ -26,10 +26,10 @@ spec:
         # it's Java it needs lots of memory
         resources:
           limits:
-            cpu: 200m
+            cpu: 800m
             memory: 1000Mi
           requests:
-            cpu: 100m
+            cpu: 400m
             memory: 500Mi
         readinessProbe:
           httpGet:
