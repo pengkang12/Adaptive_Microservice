@@ -56,9 +56,9 @@ def onlineInference(model_list, workflows):
         for row in csv_reader:
             current_data.append(row)
     # remember update thread number for current_data
-    print("cuurent data is ", current_data[1])
+    print("inference data is ", current_data[1])
     os.system("mv {0}/online_* /tmp/data/".format(data_dir))
-    print(model_list)
+    print("inference model information is ", model_list)
      
     new_workflows = {} 
     updated_workflow = False
@@ -139,7 +139,7 @@ def main():
             # online scaling
             #onlineScaling(apps_v1, clusterConfs, workflow)
             pass
-
+        print("---------------------------------end experiment---------------------------------\n")
 main()
 
 

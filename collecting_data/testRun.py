@@ -28,7 +28,7 @@ data_dir = "training_data"
 
 def collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po):
 
-    print("\nTest %s start" % exp_Nm)
+    print("\n\nTest %s start" % exp_Nm)
     # build locust command to run locust
     locustCmd = "locust --host http://" + k8url + " -f " + locustF + " -u " + clientCnt + " -t " + locustDur + " --headless --print-stats --csv=locust "
 
