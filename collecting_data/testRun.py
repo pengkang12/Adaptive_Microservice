@@ -27,16 +27,17 @@ data_dir = "training_data"
 #TODO: Figure out strategy for pod isolation on nodes when applying interference to those specific pod(s)
 
 def collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po):
+
+    print("\nTest %s start" % exp_Nm)
     # build locust command to run locust
     locustCmd = "locust --host http://" + k8url + " -f " + locustF + " -u " + clientCnt + " -t " + locustDur + " --headless --print-stats --csv=locust "
 
     locustArgs = shlex.split(locustCmd)
-    print("locust Command: %s\n" % locustCmd)
-    print("locust CMD args: %s\n" % locustArgs)
+    print("locust Command: %s" % locustCmd)
+    print("locust CMD args: %s" % locustArgs)
     # TODO: Later: confirm cluster is setup properly
 
     # Get time-stamp before running test
-    print("Test %s start\n" % exp_Nm)
 
     # TODO: add perfstat shell cmd in 
     # Exec perfstat using params passed in through testParam file

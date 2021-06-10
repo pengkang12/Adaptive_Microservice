@@ -18,11 +18,12 @@ from lib.locust_basic import moveLocustResults
 from testRun import collectData
 from lib.basic import testDirInit
 from lib.online_optimize import optimize, load_models
+from lib.container_mapping import read_container_host_mapping_3
 
 #TODO: Add ability to place interference pods on specific nodes in cluster
 #TODO: Add ability to scale different number of pods for each micro-service
 #TODO: Figure out strategy for pod isolation on nodes when applying interference to those specific pod(s)
-   
+
 
 data_dir = "online_data"
 
@@ -39,14 +40,14 @@ def extractData(testDirPath):
 
     print("Started cmd: {0}".format(cmdString))
     os.chdir("..")
-    time.sleep(5)
+    time.sleep(3)
     # store old data
 
 def onlineScaling(apps_instance, clusterConfs, workflow):
     populateClusterConfig(clusterConfs, workflow)
     workflowScale(apps_instance, clusterConfs)
 
-def onlineInference(model_list):
+def onlineInference(model_list, workflows):
     # read data from bigtable.csv
     current_data = []
     with open(os.getcwd()+'/{}/bigtable.csv'.format(data_dir)) as bigtable_file:
@@ -55,10 +56,20 @@ def onlineInference(model_list):
         for row in csv_reader:
             current_data.append(row)
     # remember update thread number for current_data
-    print("cuurent data is ", current_data)
+    print("cuurent data is ", current_data[1])
     os.system("mv {0}/online_* /tmp/data/".format(data_dir))
-    print(model_list) 
-    return current_data
+    print(model_list)
+     
+    new_workflows = {} 
+    updated_workflow = False
+    for model in model_list:
+        #new_workflows = optimize()
+        for key in new_workflows.keys():
+            if new_workflows[key] != workflows[key]:
+                updated_workflow = True 
+                workflows[key] = new_workflows[key] 
+ 
+    return workflows, updated_workflow
 
 def main():
     #construct & parse args
@@ -103,31 +114,31 @@ def main():
         exp_Nm = "online_color_1_none_none_{}".format(current_time)
         testDirPath = testDirInit(exp_Nm, data_dir) #Create current test's directory
  
-        print("Current running experiment: %s\n" % exp_Nm)
-
         collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po) 
         additional_runtime = 10
         print ("[debug] sleeping for additional {} sec".format(additional_runtime))
         if additional_runtime > 0:
             time.sleep(additional_runtime)
+        
         # extracted_data
         extractData(testDirPath)
- 
+        
+        # get workflow information
+        workflow = {'cart': 1, 'catalogue': 1, 'mongodb': 1, 'mysql': 1, 
+                    'payment': 1, 'ratings': 1, 'shipping': 1, 'user': 1, 'web': 1} 
+        real_workflow = read_container_host_mapping_3(testDirPath)
+        for key in workflow.keys():
+            workflow[key] = real_workflow[key]
+        print(workflow)
+
         # online inference 
-        workflow = {'cart': 1, 'ratings': 1, 'shipping': 1, 'catalogue': 1, 'user': 1, 'payment': 1, 'web': 1}
-        # workflow = online_inference()
-        onlineInference(model_list) 
+        workflow, updated_workflow = onlineInference(model_list, workflow) 
         # add on: if ML's model doesn't work. We request another big machine to re-train model again using our history data. 
         # then we download new model and inference at next time.
-        if workflow == None:
-            # update
-            pass
-        else: 
+        if updated_workflow == True:
             # online scaling
             #onlineScaling(apps_v1, clusterConfs, workflow)
             pass
- 
-       # update exp_Nm, because pod has a new name.
 
 main()
 
