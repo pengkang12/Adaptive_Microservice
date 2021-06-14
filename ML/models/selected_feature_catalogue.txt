@@ -1,5 +1,8 @@
+cart_vm_util
 catalogue_vm_util
-catalogue_perf_cpi
-catalogue_cont_memR5s_avg
-dispatch_perf_llc
+dispatch_cont_netW5s_avg
 payment_vm_util
+rabbitmq_vm_util
+rabbitmq_cont_netW5s_avg
+web_vm_util
+thread
