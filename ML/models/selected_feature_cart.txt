@@ -1,4 +1,9 @@
 cart_vm_util
 catalogue_vm_util
-dispatch_cont_netW5s_avg
+mysql_vm_util
+payment_vm_util
 rabbitmq_vm_util
+redis_vm_util
+shipping_vm_util
+web_vm_util
+thread
