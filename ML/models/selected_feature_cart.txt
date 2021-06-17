@@ -1,9 +1,17 @@
 cart_vm_util
 catalogue_vm_util
+mongodb_vm_util
 mysql_vm_util
+mysql_cont_cpu5s_avg
 payment_vm_util
+payment_cont_cpu5s_avg
 rabbitmq_vm_util
+rabbitmq_cont_cpu5s_avg
+ratings_vm_util
+ratings_cont_cpu5s_avg
 redis_vm_util
 shipping_vm_util
+shipping_cont_cpu5s_avg
 web_vm_util
+web_cont_cpu5s_avg
 thread
