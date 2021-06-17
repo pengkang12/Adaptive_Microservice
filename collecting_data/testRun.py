@@ -106,6 +106,7 @@ def main():
 
     clusterConfs = ClusterInfo()
     interference_level = {} 
+    interference_level['none'] = 0
     interference_level['low'] = 1
     interference_level['medium'] = 2
     interference_level['high'] = 3 

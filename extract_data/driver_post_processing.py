@@ -18,7 +18,7 @@ inputFile['containernetR'] = "container-netR5sRaw.csv"
 result = dict()
 workflow = ["web", "cart", "catalogue", "ratings", "user", "shipping", "payment"] 
  
-def get_latency(dir_name):
+def get_latency1(dir_name):
     count = dict() 
     for name in workflow:
         result[name] = 'N/A'
@@ -42,6 +42,7 @@ def get_latency(dir_name):
             count['web'] = max(row95, count['web'])
         else:
             if "ratings/api/rate" in name:
+            #if "ratings" in name:
                 count['ratings'] = max(row95, count['ratings'])
             elif "payment" in name:
                 count['payment'] = max(row95, count['payment'])
@@ -49,21 +50,21 @@ def get_latency(dir_name):
                 count['catalogue'] = max(row95, count['catalogue'])
             elif "shipping/confirm" in name:
                 count['shipping'] = max(row95, count['shipping'])
-            elif "cart/cart/" in name:
+            elif "cart" in name:
                 count['cart'] = max(row95, count['cart'])
-            elif "/api/user" in name:
+            elif "/api/user/login" in name:
                 count['user'] = max(row95, count['user']) 
 
     for key in result.keys():
         if count[key] > 0:
-            result[key] = count[key] 
+            result[key] = count[key] * 0.5
             #print(count[key], result[key])
         else:
             result[key] = 'N/A'
     return result
 
 
-def get_latency1(dir_name):
+def get_latency(dir_name):
     count = dict() 
     for name in workflow:
         result[name] = 'N/A'
@@ -86,20 +87,28 @@ def get_latency1(dir_name):
         elif '/' == row['Name']:
             count['web'] += [row95]*request_count
         else:
-            if "ratings/api/rate" in name:
+            #if "ratings/api/rate" in name:
+            if "ratings" in name:
                 count['ratings'] += [row95] * request_count
             elif "payment" in name:
                 count['payment'] += [row95] * request_count
-            elif "catalogue/categories" in name:
+            elif "catalogue" in name:
                 count['catalogue'] += [row95] * request_count
-            elif "shipping/confirm" in name:
+            elif "shipping" in name:
                 count['shipping'] += [row95] * request_count
-            elif "cart/add/" in name:
+            elif "cart" in name:
                 count['cart'] += [row95] * request_count
- 
+            #elif "/api/user/login" in name:
+            elif "/api/user" in name:
+                count['user'] += [row95] * request_count
+
+
     for key in result.keys():
         if len(count[key]) > 0:
-            result[key] = np.percentile(count[key], 95) 
+            result[key] = np.percentile(count[key], 50) 
+            if key in ['user', 'shipping']:
+                #result[key] = np.percentile(count[key], 50) 
+                result[key] = sum(count[key])/len(count[key])
             #print(count[key], result[key])
         else:
             result[key] = 'N/A'
@@ -218,7 +227,7 @@ def get_dep_name(depdict, podName):
 
 # returns avg amount of  cpu util (per 5 seconds) (measured in seconds) per pod type
 def get_container_metrics(dir_name,start_pos,end_pos, inputFileName, additional=None):
-    start_pos = 1
+    start_pos = 0
     end_pos = 13
     iresult = {}
     pod_name_list = ['cart', 'catalogue', 'dispatch', 'mongodb', 'mysql', 'payment', 
@@ -251,36 +260,87 @@ def get_container_metrics(dir_name,start_pos,end_pos, inputFileName, additional=
                
                 pod = get_dep_name(iresult, data[0])
                 if pod:
-                    iresult[pod].append(get_line_avg(data[1:], start_pos, end_pos, additional))
-
+                    if additional == "cpuavg":
+                        iresult[pod].append(get_container_cpu_avg(data[1:], start_pos, end_pos))
+                    else:
+                        iresult[pod].append(get_line_avg(data[1:], start_pos, end_pos, additional))
+ 
         #print("iresutl ", iresult) 
 	# all avg's collected, create return list    
         ret = {}
         for k, v in iresult.items():
-            total = 0
-            cnt = 0
+            total = []
             for i, val in enumerate(v):
                 if val == "N/A" or val == "nan":
                     continue
-                total += float(val)
-                cnt += 1
+                total.append(float(val))
 
-            if total == 0:
+            if len(total) == 0:
                 ret[k] = "0"
             else:
                 # return avg of all pod avgs for specific deployment
-                ret[k] =  float(total/cnt)
-        
+                #if additional == "cpuavg":
+                #    ret[k] =  max(total)
+                #else:
+                ret[k] =  float(sum(total)/len(total))
         if debug:
             #print("Service avg vals ret: {}".format(ret))
             pass
         return ret
 
+def get_line_avg(inputs, start_i, end_i, additional=None):
+    last_entry_cnt = 1
+    prev_val = 0
+    diffs = []
+    for i, entry in enumerate(inputs, start_i-1):
+        # passed data section, break
+        if i >= end_i:
+            break
+        # if entry is blank, just iterate num entries since last entry
+        if entry == '':
+            last_entry_cnt += 1
+            continue
+        # if first entry, populate init prev_val & continue
+        entry = float(entry)
+        if prev_val == 0:
+            prev_val = entry
+            last_entry_cnt = 1
+            continue
+        else:
+            # Incase of error where newer entry is less than prev, data is not valid, return N/A
+            if prev_val > entry: 
+                break
+                continue 
+            elapsed = abs(entry - prev_val) / last_entry_cnt
+            last_entry_cnt = 1
+            prev_val = entry
+            diffs.append(elapsed)
+
+    if len(diffs) == 0:
+        return "N/A"
+    total = 0.0        
+    for ind ,i in enumerate(diffs):
+        total += i
+    return total / len(diffs)
+
+
 def get_container_cpu_avg(inputs, start_i, end_i):
-    lst = [float(i) for i in inputs[start_i:end_i] if i]
+    lst = [float(i) for i in inputs[start_i:end_i] if i not in ['']]
     if len(lst) == 0 or lst[-1] - lst[0] < 0 or lst[-1] - lst[0] > 1000:
         return "N/A"
-    return lst[-1] - lst[0]
+    print(lst)
+    new_lst = []
+    for i in range(len(lst)-1):
+        tmp = lst[i+1] - lst[i]
+        if tmp > 0:
+            new_lst.append(tmp)
+    if len(new_lst) == 0:
+        return "N/A"
+    ret = np.percentile(sorted(new_lst), 50)
+    #ret = max(new_lst)
+    print(ret, new_lst)
+    return ret*100
+    #return lst[-1] - lst[0]
 
     prev_val = 0
     diffs = []
@@ -321,7 +381,7 @@ def get_container_cpu_avg(inputs, start_i, end_i):
     return total
 
 # inputs is a list of string typed floats
-def get_line_avg(inputs, start_i, end_i, additional=None):
+def get_line_avg2(inputs, start_i, end_i, additional=None):
     cnt = 0
     count = 0.0
     for i, value in enumerate(inputs):
@@ -331,6 +391,23 @@ def get_line_avg(inputs, start_i, end_i, additional=None):
     if cnt == 0:
         return '0'
     return count/cnt
+
+# inputs is a list of string typed floats
+def get_line_max(inputs, start_i, end_i, additional=None):
+    ret = 0
+    for i, value in enumerate(inputs):
+        if i >= start_i and value not in ['0', ''] and float(value) > ret:
+            ret = float(value)
+    return ret 
+
+def get_line_medium(inputs, start_i, end_i, additional=None):
+    ret = []
+    for i, value in enumerate(inputs):
+        if i >= start_i and value not in ['']:
+            ret.append(float(value))
+    if len(ret) == 0:
+        return 0
+    return np.percentile(ret, 50) 
 
 
 

@@ -62,8 +62,8 @@ def onlineInference(model_list, workflows):
      
     new_workflows = {} 
     updated_workflow = False
-    for model in model_list:
-        #new_workflows = optimize()
+    for name in model_list.keys():
+        #new_workflows = optimize(model_list[name], current_data[1], name)
         for key in new_workflows.keys():
             if new_workflows[key] != workflows[key]:
                 updated_workflow = True 

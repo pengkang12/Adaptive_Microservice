@@ -1,19 +1,18 @@
 #constrained nonlinear optimization 
-from scipy.optimize import minimize
+from scipy.optimize import minimize, shgo
 from scipy.optimize import Bounds
 from scipy.optimize import BFGS
 from scipy.optimize import LinearConstraint
 from scipy.optimize import NonlinearConstraint
 import joblib
 import numpy as np
-import timeit
+import time
 
-
-slo_target = {
-    'user' : 200,
-    'cart' : 200,
-    'catalogue' : 200,
-    'payment' : 200,
+slo_target_list = {
+    'user' : 150,
+    'cart' : 100,
+    'catalogue' : 100,
+    'payment' : 2000,
     'ratings' : 200,
 }
 
@@ -31,52 +30,53 @@ def load_models():
         models[name]['cpu_loc'] = cpu_loc
     return models
 
-CPU_length = 2
 
-half_cpu_length = 3
-slo_target = 160
-
-
-def optimize(model, data, name):
-
-    selected_feature = model[name]
+def optimize(model, data, workflow):
+    
+    #print(data)
+    model_gp = model['model']
+    selected_feature = model['selected_feature']
     scaler = model['scaler']
+    
     cpu_loc = model['cpu_loc'] 
-    slo_target = model['slo_target'] 
-    start = timer()
+    slo_target = slo_target_list[workflow] 
     
     ### initialize data
-    rdf = data[selected_feature]
+    X = data[selected_feature]
+    
     #normalized values
-    norm_temp = scaler.transform(temp)
+    norm_temp = scaler.transform(X)[0]
+    length = len(norm_temp)
     
     def cpusum(x):
         """sum of normalized cpu utilization of various microservices"""
         return -1*sum(x)
 
     def cons_f(x):
-        temp = norm_temp.copy()
-        for val in x:
-            temp[cpu_loc] = val
+        temp = update_data(norm_temp, x)
         #temp = np.concatenate(( x, norm_vm, norm_workload), axis=None).reshape(1,length)
         y_pred, sigma = model_gp.predict(temp, return_std=True)
+        #print(temp, y_pred, sigma, slo_target)
         return -1.0*(y_pred+2*sigma)+slo_target
 
+    
+    def update_data(ret, update_list):
+        length = len(ret)
+        temp = ret.copy()
+        for val in update_list:
+            temp[cpu_loc] = val
+        return np.array(temp).reshape(1, length)
+    
     bounds = [(-1,1)]*len(cpu_loc)
     cons = ({'type': 'ineq', 'fun': cons_f})
     res = shgo(cpusum, bounds, iters=10,constraints=cons)
     print(res.x, cpusum(res.x))
 
-    temp = norm_temp.copy()
-    for val in res.x:
-        temp[cpu_loc] = val
- 
+    temp = update_data(norm_temp, res.x)
     y_pred, sigma = model_gp.predict(temp, return_std=True)
     print("response time=", y_pred, "stdev=", sigma, "target=", slo_target)
     final_result = scaler.inverse_transform(temp)[0]
     cputhresholds = [final_result[loc] for loc in cpu_loc]
-    end = timer()
-    print ("optimize time is ", end - start)
     print ("denormalized cpu utilization % thresholds=", cputhresholds)
     print ("sum of denormalized cpu utilization % =", sum(cputhresholds))
     print ("\n")
