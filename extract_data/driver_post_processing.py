@@ -19,63 +19,18 @@ result = dict()
 result2 = dict()
 result3 = dict()
 
-workflow = ["web", "cart", "catalogue", "ratings", "user", "shipping", "payment"] 
+workflow = ["web", "cart", "catalogue", "ratings", "user", "shipping", "payment", "other"] 
  
-def get_latency1(dir_name):
-    count = dict() 
-    for name in workflow:
-        result[name] = 'N/A'
-        count[name] = 0
-     
-    file_name = os.path.join(dir_name, inputFile['locust_stats'])
-    if os.path.isfile(file_name):
-        df = pd.read_csv(file_name)
-    else:
-        return 
-    
-    #"Name","# requests","50%","66%","75%","80%","90%","95%","98%","99%","100%"
-    for index, row in df.iterrows():
-        row95 = int(row['95%'])
-        request_count = int(row['Request Count']) - int(row['Failure Count'])
-        name = row['Name']
-        #print(row['Name'], int(row95), request_count) 
-        if row95 == "N/A":
-            pass
-        elif '/' == row['Name']:
-            count['web'] = max(row95, count['web'])
-        else:
-            if "ratings/api/rate" in name:
-            #if "ratings" in name:
-                count['ratings'] = max(row95, count['ratings'])
-            elif "payment" in name:
-                count['payment'] = max(row95, count['payment'])
-            elif "catalogue" in name:
-                count['catalogue'] = max(row95, count['catalogue'])
-            elif "shipping/confirm" in name:
-                count['shipping'] = max(row95, count['shipping'])
-            elif "cart" in name:
-                count['cart'] = max(row95, count['cart'])
-            elif "/api/user/login" in name:
-                count['user'] = max(row95, count['user']) 
-
-    for key in result.keys():
-        if count[key] > 0:
-            result[key] = count[key]
-            #print(count[key], result[key])
-        else:
-            result[key] = 'N/A'
-    return result
-
-
 def get_latency(dir_name):
     count = dict() 
     failure_count = dict() 
-     
+    latency = dict() 
     for name in workflow:
         result[name] = 'N/A'
         result2[name] = 'N/A'
         result3[name] = 'N/A'
  
+        latency[name] = []
         count[name] = []
         failure_count[name] = 0
      
@@ -88,51 +43,55 @@ def get_latency(dir_name):
     #"Name","# requests","50%","66%","75%","80%","90%","95%","98%","99%","100%"
     for index, row in df.iterrows():
         row95 = int(row['95%'])
-        request_count = int(row['Request Count']) - int(row['Failure Count']) 
-       
+        fail_count = int(row['Failure Count'])
+        request_count = int(row['Request Count'])  - fail_count
         #    continue
-        name = row['Name']
+        url = row['Name']
         #print(row['Name'], int(row95), request_count) 
         if row95 == "N/A":
-            pass
-        elif '/' == row['Name']:
-            count['web'] += [row95]*request_count
+            continue
+        elif '/' == url:
+            work = 'web' 
+            latency[work] += [row95]
+            count[work] += request_count,
+            failure_count[work] += fail_count
         else:
+            work = "other"
+            if "/api/ratings/api/rate" in url:
+            #if "/api/ratings/api/fetch" in name:
+                work = 'ratings'
+            elif "payment" in url:
+                work = 'payment'
+            elif "catalogue/product/" in url:
+            #elif "catalogue" in name:
+                work = 'catalogue'
+            elif "shipping/confirm" in url:
+            #elif "shipping" in name:
+                work  = 'shipping'
+            elif "cart/add" in url:
+                work = 'cart'
+            #elif "/api/user/login" in url:
+            elif "/api/user/login" in url:
+                work = 'user'
 
-            #if "ratings/api/rate" in name:
-            if "/api/ratings/api/fetch" in name:
-                count['ratings'] += [row95] *request_count
-                failure_count['ratings'] += int(row['Failure Count'])
-            elif "payment" in name:
-                count['payment'] += [row95]*request_count
-                failure_count['payment'] += int(row['Failure Count'])
-            elif "catalogue/categories" in name:
-                count['catalogue'] += [row95] *request_count
-                failure_count['catalogue'] += int(row['Failure Count'])
-            elif "shipping/codes" in name:
-                count['shipping'] += [row95] *request_count
-                failure_count['shipping'] += int(row['Failure Count'])
-            elif "cart" in name:
-                count['cart'] += [row95] *request_count
-                failure_count['cart'] += int(row['Failure Count'])
-            #elif "/api/user/login" in name:
-            elif "/api/user/login" in name:
-                count['user'] += [row95]*request_count
-                failure_count['user'] += int(row['Failure Count'])
+            latency[work] += [row95]
+            count[work] += request_count,
+            failure_count[work] += fail_count
  
     for key in result.keys():
+        if key == 'other':
+            continue
         if len(count[key]) > 0:
-            result[key] = np.percentile(sorted(count[key]), 50) 
-           
-            print(result[key], count[key])          
-            #if len(failure_count[key]) > 0:
-            #result[key] = max(count[key]) 
-            #result[key] *= (1+failure_count[key]/100.0)
-            result2[key] = len(count[key]) 
+            tmp = []
+            for c in count[key]:
+                tmp += latency[key] * c
+            result[key] = np.percentile(tmp, 75) 
+            #result[key] = sum(tmp)/len(tmp)
+            result2[key] = sum(count[key])
             result3[key] = failure_count[key]
         else:
             result[key] = 'N/A'
-    return result, result2,result3
+    return result, result2, result3
 
 '''
 TODO:
@@ -278,10 +237,10 @@ def get_container_metrics(dir_name,start_pos,end_pos, inputFileName, additional=
                
                 pod = get_dep_name(iresult, data[0])
                 if pod:
-                    if additional == "cpuavg":
-                        iresult[pod].append(get_container_cpu_avg(data[1:], start_pos, end_pos))
-                    else:
-                        iresult[pod].append(get_line_avg(data[1:], start_pos, end_pos, additional))
+                    #if additional == "cpuavg":
+                    #    iresult[pod].append(get_container_cpu_avg(data[1:], start_pos, end_pos))
+                    #else:
+                    iresult[pod].append(get_line_avg(data[1:], start_pos, end_pos, additional))
  
         #print("iresutl ", iresult) 
 	# all avg's collected, create return list    
@@ -346,19 +305,12 @@ def get_container_cpu_avg(inputs, start_i, end_i):
     lst = [float(i) for i in inputs[start_i:end_i] if i not in ['']]
     if len(lst) == 0 or lst[-1] - lst[0] < 0 or lst[-1] - lst[0] > 1000:
         return "N/A"
-    print(lst)
-    #return lst[-1] - lst[0]
-    
     new_lst = []
-    cnt = 1
     prev = lst[0]
     for i in range(1, len(lst)):
-        if prev == lst[i]:
-            cnt = 1
-        elif prev < lst[i]:
-            new_lst.append((lst[i]-prev)/cnt)
+        if prev < lst[i]:
+            new_lst.append(lst[i]-prev)
             prev = lst[i]
-            cnt = 1
             
     if len(new_lst) == 0:
         return "N/A"
@@ -366,45 +318,6 @@ def get_container_cpu_avg(inputs, start_i, end_i):
     ret = sum(new_lst)/len(new_lst)
     print(ret, new_lst)
     return ret*100
-
-
-    prev_val = 0
-    diffs = []
-    first_entry_cnt = 0
-    for i, entry in enumerate(inputs, start_i-1):
-        # passed data section, break
-        if i >= end_i:
-            break
-        # if entry is blank, just iterate num entries since last entry
-        if entry == '':
-            continue
-        # if first entry, populate init prev_val & continue
-        entry = float(entry)
-        if prev_val == 0:
-            prev_val = entry
-            first_entry_cnt = i
-            continue
-        else:
-            # Incase of error where newer entry is less than prev, data is not valid, return N/A
-            if prev_val > entry:
-                if debug:
-                    print("Error in data for processing a pod.")
-                diffs = []
-                break
-
-            elapsed = (entry - prev_val)
-            prev_val = entry
-            last_entry_cnt = i
-            diffs.append(elapsed)
-
-    if len(diffs) == 0:
-        return "N/A"
-    total = 0.0        
-    for ind ,i in enumerate(diffs):
-        total += i
-    if total > 1000:
-        return "N/A"
-    return total
 
 
 # inputs is a list of string typed floats
