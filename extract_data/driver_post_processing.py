@@ -16,6 +16,9 @@ inputFile['containermemR'] = "container-memR5sRaw.csv"
 inputFile['containernetW'] = "container-netW5sRaw.csv"
 inputFile['containernetR'] = "container-netR5sRaw.csv"
 result = dict()
+result2 = dict()
+result3 = dict()
+
 workflow = ["web", "cart", "catalogue", "ratings", "user", "shipping", "payment"] 
  
 def get_latency1(dir_name):
@@ -33,7 +36,7 @@ def get_latency1(dir_name):
     #"Name","# requests","50%","66%","75%","80%","90%","95%","98%","99%","100%"
     for index, row in df.iterrows():
         row95 = int(row['95%'])
-        request_count = int(row['Request Count'])
+        request_count = int(row['Request Count']) - int(row['Failure Count'])
         name = row['Name']
         #print(row['Name'], int(row95), request_count) 
         if row95 == "N/A":
@@ -46,7 +49,7 @@ def get_latency1(dir_name):
                 count['ratings'] = max(row95, count['ratings'])
             elif "payment" in name:
                 count['payment'] = max(row95, count['payment'])
-            elif "catalogue/categories" in name:
+            elif "catalogue" in name:
                 count['catalogue'] = max(row95, count['catalogue'])
             elif "shipping/confirm" in name:
                 count['shipping'] = max(row95, count['shipping'])
@@ -57,7 +60,7 @@ def get_latency1(dir_name):
 
     for key in result.keys():
         if count[key] > 0:
-            result[key] = count[key] * 0.5
+            result[key] = count[key]
             #print(count[key], result[key])
         else:
             result[key] = 'N/A'
@@ -66,9 +69,15 @@ def get_latency1(dir_name):
 
 def get_latency(dir_name):
     count = dict() 
+    failure_count = dict() 
+     
     for name in workflow:
         result[name] = 'N/A'
+        result2[name] = 'N/A'
+        result3[name] = 'N/A'
+ 
         count[name] = []
+        failure_count[name] = 0
      
     file_name = os.path.join(dir_name, inputFile['locust_stats'])
     if os.path.isfile(file_name):
@@ -79,7 +88,9 @@ def get_latency(dir_name):
     #"Name","# requests","50%","66%","75%","80%","90%","95%","98%","99%","100%"
     for index, row in df.iterrows():
         row95 = int(row['95%'])
-        request_count = int(row['Request Count'])
+        request_count = int(row['Request Count']) - int(row['Failure Count']) 
+       
+        #    continue
         name = row['Name']
         #print(row['Name'], int(row95), request_count) 
         if row95 == "N/A":
@@ -87,32 +98,41 @@ def get_latency(dir_name):
         elif '/' == row['Name']:
             count['web'] += [row95]*request_count
         else:
+
             #if "ratings/api/rate" in name:
-            if "ratings" in name:
-                count['ratings'] += [row95] * request_count
+            if "/api/ratings/api/fetch" in name:
+                count['ratings'] += [row95] *request_count
+                failure_count['ratings'] += int(row['Failure Count'])
             elif "payment" in name:
-                count['payment'] += [row95] * request_count
-            elif "catalogue" in name:
-                count['catalogue'] += [row95] * request_count
-            elif "shipping" in name:
-                count['shipping'] += [row95] * request_count
+                count['payment'] += [row95]*request_count
+                failure_count['payment'] += int(row['Failure Count'])
+            elif "catalogue/categories" in name:
+                count['catalogue'] += [row95] *request_count
+                failure_count['catalogue'] += int(row['Failure Count'])
+            elif "shipping/codes" in name:
+                count['shipping'] += [row95] *request_count
+                failure_count['shipping'] += int(row['Failure Count'])
             elif "cart" in name:
-                count['cart'] += [row95] * request_count
+                count['cart'] += [row95] *request_count
+                failure_count['cart'] += int(row['Failure Count'])
             #elif "/api/user/login" in name:
-            elif "/api/user" in name:
-                count['user'] += [row95] * request_count
-
-
+            elif "/api/user/login" in name:
+                count['user'] += [row95]*request_count
+                failure_count['user'] += int(row['Failure Count'])
+ 
     for key in result.keys():
         if len(count[key]) > 0:
-            result[key] = np.percentile(count[key], 50) 
-            if key in ['user', 'shipping']:
-                #result[key] = np.percentile(count[key], 50) 
-                result[key] = sum(count[key])/len(count[key])
-            #print(count[key], result[key])
+            result[key] = np.percentile(sorted(count[key]), 50) 
+           
+            print(result[key], count[key])          
+            #if len(failure_count[key]) > 0:
+            #result[key] = max(count[key]) 
+            #result[key] *= (1+failure_count[key]/100.0)
+            result2[key] = len(count[key]) 
+            result3[key] = failure_count[key]
         else:
             result[key] = 'N/A'
-    return result
+    return result, result2,result3
 
 '''
 TODO:
@@ -227,8 +247,6 @@ def get_dep_name(depdict, podName):
 
 # returns avg amount of  cpu util (per 5 seconds) (measured in seconds) per pod type
 def get_container_metrics(dir_name,start_pos,end_pos, inputFileName, additional=None):
-    start_pos = 0
-    end_pos = 13
     iresult = {}
     pod_name_list = ['cart', 'catalogue', 'dispatch', 'mongodb', 'mysql', 'payment', 
 			'rabbitmq', 'ratings', 'redis', 'shipping', 'user', 'web']
@@ -321,26 +339,34 @@ def get_line_avg(inputs, start_i, end_i, additional=None):
     total = 0.0        
     for ind ,i in enumerate(diffs):
         total += i
-    return total / len(diffs)
-
+    #return total / len(diffs)
+    return total
 
 def get_container_cpu_avg(inputs, start_i, end_i):
     lst = [float(i) for i in inputs[start_i:end_i] if i not in ['']]
     if len(lst) == 0 or lst[-1] - lst[0] < 0 or lst[-1] - lst[0] > 1000:
         return "N/A"
     print(lst)
+    #return lst[-1] - lst[0]
+    
     new_lst = []
-    for i in range(len(lst)-1):
-        tmp = lst[i+1] - lst[i]
-        if tmp > 0:
-            new_lst.append(tmp)
+    cnt = 1
+    prev = lst[0]
+    for i in range(1, len(lst)):
+        if prev == lst[i]:
+            cnt = 1
+        elif prev < lst[i]:
+            new_lst.append((lst[i]-prev)/cnt)
+            prev = lst[i]
+            cnt = 1
+            
     if len(new_lst) == 0:
         return "N/A"
-    ret = np.percentile(sorted(new_lst), 50)
-    #ret = max(new_lst)
+    #ret = np.percentile(sorted(new_lst), 50)
+    ret = sum(new_lst)/len(new_lst)
     print(ret, new_lst)
     return ret*100
-    #return lst[-1] - lst[0]
+
 
     prev_val = 0
     diffs = []
@@ -379,6 +405,7 @@ def get_container_cpu_avg(inputs, start_i, end_i):
     if total > 1000:
         return "N/A"
     return total
+
 
 # inputs is a list of string typed floats
 def get_line_avg2(inputs, start_i, end_i, additional=None):
@@ -485,16 +512,22 @@ def get_vm_net(dir_name, container_net):
 
 
 
-def process(dir_name,start_pos,end_pos,mapping):
+def process(dir_name,duration,mapping):
     # actual aggregation
     result = {}
     #result['test_id'] = dir_name
 
-    latency = get_latency(dir_name)
-    
+    latency, workload, workload_fail = get_latency(dir_name)
+
+    duration = int(duration) 
+    start_pos, end_pos = 5, duration - 5 
     vm_cpu = get_cpu_vm(dir_name)
     perf_data =  get_perf_data(dir_name,start_pos,end_pos)
     print("Current dirName is: {}".format(dir_name)) #debug
+
+    start_pos, end_pos = 3, int((duration-15)/30)*6 + 1 + 3
+
+    print(start_pos, end_pos)
     container_cpu = get_container_metrics(dir_name, start_pos, end_pos, inputFile["containercpu"], 'cpuavg')
     #container_cpu_inc = get_container_metrics(dir_name, start_pos, end_pos, inputFile["containercpu"])
     container_memW = get_container_metrics(dir_name, start_pos, end_pos, inputFile["containermemW"])
@@ -528,6 +561,8 @@ def process(dir_name,start_pos,end_pos,mapping):
         
         
         result[service_name]['95th_latency'] = latency.get(service_name,0)
+        result[service_name]['workload'] = workload.get(service_name,0)
+        result[service_name]['workload_fail'] = workload_fail.get(service_name,0)
     
     for svc_name, node in mapping.items():
         if svc_name in container_cpu:
@@ -552,4 +587,4 @@ def process(dir_name,start_pos,end_pos,mapping):
 
 if __name__ == "__main__":
 
-    process(dir_name=sys.argv[1],start_pos=int(sys.argv[2]),end_pos=int(sys.argv[3]),mapping=sys.argv[4])
+    process(dir_name=sys.argv[1],duration=int(sys.argv[2]),mapping=sys.argv[3])

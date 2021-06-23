@@ -57,15 +57,15 @@ def main(current_dir=""):
     else:
         current_dir = os.path.abspath(current_dir)
     
-    start_pos = 5
-    end_pos = 55
+    duration = 120
+
     output_file = "bigtable.csv"
     output_file = os.path.join(current_dir,output_file)
     mapFile = "container_node_mapping.csv"
 
     #mapping = read_container_host_mapping(current_dir, mapFile)
 
-
+    mapping = None
 
     data = [os.path.join(current_dir, item) for item in os.listdir(current_dir)
         if os.path.isdir(os.path.join(current_dir, item))]
@@ -74,7 +74,7 @@ def main(current_dir=""):
     header_written = False
     for sub_dir in dir_list:
         if debug:
-            print("driver_post_process.py {} {} {} {}".format(sub_dir,start_pos,end_pos,output_file))
+            print("driver_post_process.py {} {} {}".format(sub_dir, duration, output_file))
         if True:
             if os.path.isfile(os.path.abspath(os.path.join(sub_dir, mapFile))):
                 mapping = container_mapping.read_container_host_mapping(sub_dir, mapFile)  #TODO: mapFile shall be local for each directory 
@@ -91,7 +91,7 @@ def main(current_dir=""):
                 if "stream" in mapping:
                     del mapping["stream"]
                 print(mapping)
-            result = driver_post_processing.process(sub_dir, start_pos, end_pos, mapping)
+            result = driver_post_processing.process(sub_dir, duration, mapping)
             #print(result)
             if header_written==False:
                 write_header(result,output_file)

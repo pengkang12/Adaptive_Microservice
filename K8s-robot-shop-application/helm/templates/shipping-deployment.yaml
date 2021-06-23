@@ -5,7 +5,7 @@ metadata:
   labels:
     service: shipping
 spec:
-  replicas: 1
+  replicas: 4
   selector:
     matchLabels:
       service: shipping
@@ -27,10 +27,10 @@ spec:
         resources:
           limits:
             cpu: 800m
-            memory: 1000Mi
+            memory: 2000Mi
           requests:
             cpu: 400m
-            memory: 500Mi
+            memory: 1000Mi
         readinessProbe:
           httpGet:
             path: /health

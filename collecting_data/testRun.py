@@ -63,8 +63,6 @@ def collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPa
     print("[debug] start time {}".format(datetime.datetime.now()))
 
     startT = time.time() 
-    
-    startT2 = datetime.datetime.now()        
     # Exec locust command, exporting to CSV file & using params passed in through testParam file
     locustResultFNm = testDirPath + "/LocustLog.txt"
     with open(locustResultFNm, 'w+') as locust_f:
@@ -72,7 +70,6 @@ def collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPa
     
     # Once locust command finishes, get end timestamp
     stopT = time.time()
-    stopT2 = datetime.datetime.now()
     print ("[debug] test is completed. post processing")
 
     moveLocustResults(testDirPath)
@@ -81,7 +78,7 @@ def collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPa
     cmd = "kubectl get pod -o wide -n robot-shop | awk '{print $1, $7}' > "+testDirPath+"/container_node_mapping.csv &"
     os.system(cmd)     
     # Exec Prometheus API query(s) to gather metrics & build resulting csv files
-    time.sleep(15)        
+    time.sleep(25)        
     promQueries(int(startT), int(stopT), testDirPath)
      
     return (int(runtime) - int(stopT-startT) ) + 10
@@ -143,7 +140,7 @@ def main():
         print("Configuring cluster to match experiment input, %s\n" %clusterConfs)
         clusterSetup(apps_v1, batch_v1beta1, clusterConfs)
         print("10 seconds grace period\n")
-        time.sleep(15)
+        time.sleep(25)
 
         additional_runtime = collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po)
         # delete the batch jobs 
@@ -151,6 +148,7 @@ def main():
             deletebatchJobs(batch_v1beta1,clusterConfs)
 
         print("[debug] sleeping for additional {} sec".format(additional_runtime))
+        additional_runtime += 30
         if additional_runtime > 0:
             time.sleep(additional_runtime)
         print("[debug] end time {}".format(datetime.datetime.now()))

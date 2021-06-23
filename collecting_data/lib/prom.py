@@ -103,17 +103,24 @@ def promQueries(startTime, stopTime, testDirPath):
     step='5s'
     # If you’re using Kubernetes 1.16 and above you’ll have to use pod instead of pod_name and container instead of container_name.
     # Can use queries below to find rate of change also
-    cpu5s = json.loads(prom.query_rang(metric='sum(irate(container_cpu_usage_seconds_total{namespace="'+namespace+'"}[1m])) by (pod)', start=startTime, end=stopTime, step=step))
-    memWriteB5s = json.loads(prom.query_rang(metric='sum(rate(container_fs_writes_bytes_total{namespace="'+namespace+'"}[1m])) by (pod)', start=startTime, end=stopTime, step=step))
-    memReadB5s = json.loads(prom.query_rang(metric='sum(rate(container_fs_reads_bytes_total{namespace="'+namespace+'"}[1m])) by (pod)', start=startTime, end=stopTime, step=step))
-    netReadB5s = json.loads(prom.query_rang(metric='sum(irate(container_network_receive_bytes_total{namespace="'+namespace+'"}[1m])) by (pod)', start=startTime, end=stopTime, step=step))
-    netWriteB5s = json.loads(prom.query_rang(metric='sum(irate(container_network_transmit_bytes_total{namespace="'+namespace+'"}[1m])) by (pod)', start=startTime, end=stopTime, step=step))
+    cpu5s = json.loads(prom.query_rang(metric='sum(container_cpu_usage_seconds_total{namespace="'+namespace+'"}) by (pod)', start=startTime, end=stopTime, step=step))
+    memWriteB5s = json.loads(prom.query_rang(metric='sum(container_fs_writes_bytes_total{namespace="'+namespace+'"}) by (pod)', start=startTime, end=stopTime, step=step))
+    memReadB5s = json.loads(prom.query_rang(metric='sum(container_fs_reads_bytes_total{namespace="'+namespace+'"}) by (pod)', start=startTime, end=stopTime, step=step))
+    netReadB5s = json.loads(prom.query_rang(metric='sum(container_network_receive_bytes_total{namespace="'+namespace+'"}) by (pod)', start=startTime, end=stopTime, step=step))
+    netWriteB5s = json.loads(prom.query_rang(metric='sum(container_network_transmit_bytes_total{namespace="'+namespace+'"}) by (pod)', start=startTime, end=stopTime, step=step))
+
+    #cpu5s = json.loads(prom.query_rang(metric='sum(irate(container_cpu_usage_seconds_total{namespace="'+namespace+'"}[1m])) by (pod)', start=startTime, end=stopTime, step=step))
+    #memWriteB5s = json.loads(prom.query_rang(metric='sum(rate(container_fs_writes_bytes_total{namespace="'+namespace+'"}[1m])) by (pod)', start=startTime, end=stopTime, step=step))
+    #memReadB5s = json.loads(prom.query_rang(metric='sum(rate(container_fs_reads_bytes_total{namespace="'+namespace+'"}[1m])) by (pod)', start=startTime, end=stopTime, step=step))
+    #netReadB5s = json.loads(prom.query_rang(metric='sum(irate(container_network_receive_bytes_total{namespace="'+namespace+'"}[1m])) by (pod)', start=startTime, end=stopTime, step=step))
+    #netWriteB5s = json.loads(prom.query_rang(metric='sum(irate(container_network_transmit_bytes_total{namespace="'+namespace+'"}[1m])) by (pod)', start=startTime, end=stopTime, step=step))
+
 
     podMetricsDict = {} # List of podDataCollection objects
     timestampList = [] # List of scraped timestamps
     podNameList = [] # List of scraped pods
     tmp_pod = []
-    #print("cpu5s, ", cpu5s)
+    print("cpu5s, ", cpu5s)
     # Create list of podDataCollection objects, with CPU vals:
     for pod in cpu5s['data']['result']:
         p = podDataCollection(pod['metric']['pod'])
