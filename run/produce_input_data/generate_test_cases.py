@@ -9,7 +9,7 @@
 import sys
 from datetime import date 
 import hashlib
-duration = 60 #sec
+duration = 120 #sec
 
 
 def getClusterConfiguration(cntCart=1,cntCatalogue=1,cntShipping=1,cntPayment=1,cntRatings=2,cntUser=2, cntWeb=2):
@@ -33,36 +33,44 @@ def getConfigHash(pods):
     
     return result 
 
-start_position = 5
-end_position = 35
+start_position = 3
+end_position = 22
 
 output_file = "default_test_case.csv"
 
 zones = ['red', 'green','blue', 'yellow']
 
-interference_level = ['low','medium','high']
+interference_level = ['none', 'low','medium'] #,'high']
 interference_type = ['stream', 'iperf']
 #interference_type = ['iperf']
 
 
-connections = [10, 15, 20, 25]
+connections = [10, 20, 30]
 
 workflow = ["cart", "catalogue", "ratings", "user", "shipping", "payment"]
 
-paramCnt = {}
-for pod in workflow:
-    paramCnt[pod] = 1
-paramCnt['cart'] = 0
-paramCnt['shipping'] = 3
 # variables - zone, interference_level, connection
 
-with open(output_file,'a' )as f:
-    f.write("#test_id/duration/rate/con/zone/i_level/{configuration}/start_position/end_position\n")
+
+def produce(shipping=4, ratings=3):
+
+
+    paramCnt = {}
+    for pod in workflow:
+        paramCnt[pod] = 2
+    paramCnt['cart'] = 1
+    paramCnt['shipping'] = shipping
+    paramCnt['ratings'] = ratings
+
+
     for work in ["cart", "catalogue", "payment", "user"]:#"ratings", "shipping"]:
-        for cnt in [1, 2, 3]:
+        for cnt in [2, 3, 4]:
             paramCnt[work] += 1
-            if paramCnt[work] == 4:
-                paramCnt[work] = 3
+            if paramCnt[work] == 5:
+                paramCnt[work] = 4
+                continue 
+            if work == "user" and paramCnt["user"] == 4:
+                paramCnt["user"] = 3
                 continue 
             for zone in zones:
                 for i_type in interference_type:
@@ -76,3 +84,11 @@ with open(output_file,'a' )as f:
                             test_id = "{}_{}_{}_{}_{}_{}".format(date_prefix,zone,con, i_type, i_level, getConfigHash(configuration) )
                             data = "{}/{}/{}/{}/{}/{}/{}/{}/{}\n".format(test_id,duration,i_type,con,zone,i_level,configuration,start_position,end_position)                             
                             f.write(data)
+
+    print("test")
+with open(output_file,'a' )as f:
+    f.write("#test_id/duration/rate/con/zone/i_level/{configuration}/start_position/end_position\n")
+    produce()
+    produce(shipping=3, ratings=3)
+    produce(shipping=3, ratings=2)
+
