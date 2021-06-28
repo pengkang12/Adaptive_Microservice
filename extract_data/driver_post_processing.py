@@ -57,16 +57,16 @@ def get_latency(dir_name):
             failure_count[work] += fail_count
         else:
             work = "other"
+            #if "/api/ratings/api/rate" in url:
             if "/api/ratings/api/rate" in url:
-            #if "/api/ratings/api/fetch" in name:
                 work = 'ratings'
             elif "payment" in url:
                 work = 'payment'
-            elif "catalogue/product/" in url:
-            #elif "catalogue" in name:
+            elif "catalogue/categories" in url:
+            #elif "catalogue" in url:
                 work = 'catalogue'
             elif "shipping/confirm" in url:
-            #elif "shipping" in name:
+            #elif "shipping" in url:
                 work  = 'shipping'
             elif "cart/add" in url:
                 work = 'cart'
@@ -82,11 +82,12 @@ def get_latency(dir_name):
         if key == 'other':
             continue
         if len(count[key]) > 0:
-            tmp = []
+            tmp = [0]
             for c in count[key]:
                 tmp += latency[key] * c
-            result[key] = np.percentile(tmp, 75) 
-            #result[key] = sum(tmp)/len(tmp)
+           
+            result[key] = np.percentile(tmp, 95) 
+
             result2[key] = sum(count[key])
             result3[key] = failure_count[key]
         else:
@@ -237,10 +238,10 @@ def get_container_metrics(dir_name,start_pos,end_pos, inputFileName, additional=
                
                 pod = get_dep_name(iresult, data[0])
                 if pod:
-                    #if additional == "cpuavg":
-                    #    iresult[pod].append(get_container_cpu_avg(data[1:], start_pos, end_pos))
-                    #else:
-                    iresult[pod].append(get_line_avg(data[1:], start_pos, end_pos, additional))
+                    if additional == "cpuavg":
+                        iresult[pod].append(get_container_cpu_avg(data[1:], start_pos, end_pos))
+                    else:
+                         iresult[pod].append(get_line_avg(data[1:], start_pos, end_pos, additional))
  
         #print("iresutl ", iresult) 
 	# all avg's collected, create return list    
@@ -314,42 +315,9 @@ def get_container_cpu_avg(inputs, start_i, end_i):
             
     if len(new_lst) == 0:
         return "N/A"
-    #ret = np.percentile(sorted(new_lst), 50)
-    ret = sum(new_lst)/len(new_lst)
+    ret = sum(new_lst)#/len(new_lst)
     print(ret, new_lst)
-    return ret*100
-
-
-# inputs is a list of string typed floats
-def get_line_avg2(inputs, start_i, end_i, additional=None):
-    cnt = 0
-    count = 0.0
-    for i, value in enumerate(inputs):
-        if i >= start_i and value not in ['0', '']:
-            count += float(value)
-            cnt += 1
-    if cnt == 0:
-        return '0'
-    return count/cnt
-
-# inputs is a list of string typed floats
-def get_line_max(inputs, start_i, end_i, additional=None):
-    ret = 0
-    for i, value in enumerate(inputs):
-        if i >= start_i and value not in ['0', ''] and float(value) > ret:
-            ret = float(value)
-    return ret 
-
-def get_line_medium(inputs, start_i, end_i, additional=None):
-    ret = []
-    for i, value in enumerate(inputs):
-        if i >= start_i and value not in ['']:
-            ret.append(float(value))
-    if len(ret) == 0:
-        return 0
-    return np.percentile(ret, 50) 
-
-
+    return ret
 
 def get_average_vm_utilization(vm_cpu, node_list):
 
@@ -438,7 +406,9 @@ def process(dir_name,duration,mapping):
     perf_data =  get_perf_data(dir_name,start_pos,end_pos)
     print("Current dirName is: {}".format(dir_name)) #debug
 
-    start_pos, end_pos = 3, int((duration-15)/30)*6 + 1 + 3
+    start_pos, end_pos = 5, 5 + 1 + 12 
+    #start_pos, end_pos = 0, 25
+
 
     print(start_pos, end_pos)
     container_cpu = get_container_metrics(dir_name, start_pos, end_pos, inputFile["containercpu"], 'cpuavg')
