@@ -57,8 +57,8 @@ def get_latency(dir_name):
             failure_count[work] += fail_count
         else:
             work = "other"
-            #if "/api/ratings/api/rate" in url:
             if "/api/ratings/api/rate" in url:
+            #if "/api/ratings" in url:
                 work = 'ratings'
             elif "payment" in url:
                 work = 'payment'
@@ -132,6 +132,7 @@ def get_cpu_vm(dir_name, start_pos, end_pos):
             #field12 for user cpu
             vm_cpu_sum = 0
             count = 0
+            vm_cpu = []
             for line in f1:
                 #print("debug:{}".format(line))
                 if ("procs" in line) or ("swpd" in line):
@@ -139,9 +140,11 @@ def get_cpu_vm(dir_name, start_pos, end_pos):
                 else:
                     if count>=start_pos and count <= end_pos:
                         vm_cpu_sum += int(line.split()[13])
+                        if int(line.split()[13]) > 0:
+                            vm_cpu.append(int(line.split()[13]))
                     count += 1
-            vm_cpu_avg[host_name] = vm_cpu_sum*1.0/(end_pos-start_pos+1)
-    print(vm_cpu_avg)
+            vm_cpu_avg[host_name] = sum(vm_cpu)*1.0/len(vm_cpu)
+    print(vm_cpu_avg, count)
     return vm_cpu_avg
 
 
@@ -412,13 +415,15 @@ def process(dir_name,duration,mapping):
     latency, workload, workload_fail = get_latency(dir_name)
 
     duration = int(duration) 
+    # 30s for grace and try to get stable results
+
     start_pos, end_pos = 30, duration-5
     vm_cpu = get_cpu_vm(dir_name, start_pos, end_pos)
-    start_pos, end_pos = 8, 23
+    start_pos, end_pos = 6, 23
     perf_data =  get_perf_data(dir_name,start_pos,end_pos)
     print("Current dirName is: {}".format(dir_name)) #debug
 
-    start_pos, end_pos = 12, 12 + 1 + 12
+    start_pos, end_pos = 6, 6 + 18 + 1
     #start_pos, end_pos = 5, 5+1+18
 
 
