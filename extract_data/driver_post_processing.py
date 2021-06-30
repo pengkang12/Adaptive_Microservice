@@ -103,10 +103,11 @@ def get_perf_data(dir_name,start_pos,end_pos):
     files = [name for name in glob.glob(dir_name+"/*_perfstat.csv")]
 
     result = dict()
-
+    
     for file in files:
         df = pd.read_csv(file)
-        df = df.loc[start_pos:end_pos+1]
+        length = df.shape[0]
+        df = df.loc[length-end_pos:length-start_pos+1]
         df = df[df['cycle']!="<not counted>"]
         df = df[df['instructions']!="<not counted>"]
         df = df[df['LLC-load-misses']!="<not counted>"]
@@ -115,22 +116,32 @@ def get_perf_data(dir_name,start_pos,end_pos):
         df['cpi'] = (df['cycle'])/(df['instructions'])
         cpi = (df['cpi'].mean())
         llc = (df['LLC-load-misses'].mean())
-        hostname = df.loc[5]['hostname']
+        hostname = df.loc[length-end_pos]['hostname']
         result[hostname] = {'cpi':cpi,'llc':llc,'hostname':hostname}
     
     return result
 
-def get_cpu_vm(dir_name):
-    files = [name for name in glob.glob(dir_name+"/*_vmfile.csv")]
+def get_cpu_vm(dir_name, start_pos, end_pos):
+    files = [name for name in glob.glob(dir_name+"/*_vmfile.tmp")]
     vm_cpu_avg = dict()
 
     #go over each files
-    for file in files:
-        with open(os.path.abspath(file), 'r') as f:
-            host_name, val = f.readline().split(':')
-            val = float(val)
-            vm_cpu_avg[host_name] = val
-    
+    for vm_file in files:
+        host_name = vm_file.split('/')[-1].split('_')[0]
+        with open(vm_file,'r') as f1:
+            #field12 for user cpu
+            vm_cpu_sum = 0
+            count = 0
+            for line in f1:
+                #print("debug:{}".format(line))
+                if ("procs" in line) or ("swpd" in line):
+                    pass
+                else:
+                    if count>=start_pos and count <= end_pos:
+                        vm_cpu_sum += int(line.split()[13])
+                    count += 1
+            vm_cpu_avg[host_name] = vm_cpu_sum*1.0/(end_pos-start_pos+1)
+    print(vm_cpu_avg)
     return vm_cpu_avg
 
 
@@ -316,7 +327,7 @@ def get_container_cpu_avg(inputs, start_i, end_i):
     if len(new_lst) == 0:
         return "N/A"
     ret = sum(new_lst)#/len(new_lst)
-    print(ret, new_lst)
+    print(ret, new_lst, len(inputs))
     return ret
 
 def get_average_vm_utilization(vm_cpu, node_list):
@@ -401,13 +412,14 @@ def process(dir_name,duration,mapping):
     latency, workload, workload_fail = get_latency(dir_name)
 
     duration = int(duration) 
-    start_pos, end_pos = 5, duration - 5 
-    vm_cpu = get_cpu_vm(dir_name)
+    start_pos, end_pos = 30, duration-5
+    vm_cpu = get_cpu_vm(dir_name, start_pos, end_pos)
+    start_pos, end_pos = 8, 23
     perf_data =  get_perf_data(dir_name,start_pos,end_pos)
     print("Current dirName is: {}".format(dir_name)) #debug
 
-    start_pos, end_pos = 5, 5 + 1 + 12 
-    #start_pos, end_pos = 0, 25
+    start_pos, end_pos = 12, 12 + 1 + 12
+    #start_pos, end_pos = 5, 5+1+18
 
 
     print(start_pos, end_pos)

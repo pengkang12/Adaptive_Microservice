@@ -26,11 +26,12 @@ data_dir = "training_data"
 #TODO: Add ability to scale different number of pods for each micro-service
 #TODO: Figure out strategy for pod isolation on nodes when applying interference to those specific pod(s)
 
-def collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po):
-
+def collectData(k8url, locustF, clientCnt, exp_Nm, runtime, testDirPath, start_po, end_po):
+    
+    locustDur = runtime + "s"
     print("\n\nTest %s start" % exp_Nm)
     # build locust command to run locust
-    locustCmd = "locust --host http://" + k8url + " -f " + locustF + " -u " + clientCnt + " -t " + locustDur + " --headless --print-stats --csv=locust "
+    locustCmd = "locust --host http://" + k8url + " -f " + locustF + " -u " + clientCnt + " -r 5 --run-time " + locustDur + " --stop-timeout 2 --headless --print-stats --csv=locust "
 
     locustArgs = shlex.split(locustCmd)
     print("locust Command: %s" % locustCmd)
@@ -134,15 +135,14 @@ def main():
         end_po = lnArgs[8]
         # add more var defs here ^ if more args get added to lines (like node color interference is on)
         print("Current running experiment: %s\n" % exp_Nm)
-        locustDur = runtime + "s"
-        
+       
         # setup cluster using input params
         print("Configuring cluster to match experiment input, %s\n" %clusterConfs)
         clusterSetup(apps_v1, batch_v1beta1, clusterConfs)
         print("10 seconds grace period\n")
         time.sleep(25)
 
-        additional_runtime = collectData(k8url, locustF, clientCnt, locustDur, exp_Nm, runtime, testDirPath, start_po, end_po)
+        additional_runtime = collectData(k8url, locustF, clientCnt, exp_Nm, runtime, testDirPath, start_po, end_po)
         # delete the batch jobs 
         if clusterConfs.interferenceLvl > 0:
             deletebatchJobs(batch_v1beta1,clusterConfs)
