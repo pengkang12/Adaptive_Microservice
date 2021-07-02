@@ -48,3 +48,26 @@ bash run_offline.sh
 cd analyze_data
 python driver_main.py ../example_data/
 ```
+
+
+# how to solve some error.
+
+# check log
+```
+kubectl -n robot-shop logs -f container-name
+```
+
+erro1: mysql and mongodb
+if you are running multiple mysql and mongodb, make sure each pod successfully run.
+
+error2: web only can have 1. if you have mutiple web pod, maybe you will face some 504 errro.
+
+
+error3: payment error. 
+check dispatch can access rabbitmq. If can't, delete pod and create again. 
+
+payment gatway can't access.  check k8s/helm/values.yaml ping payment\_gatway.
+
+error4: cart error. check web's number. and check instana is running successful. 
+
+
