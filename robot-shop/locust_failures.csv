@@ -1,0 +1,4 @@
+Method,Name,Error,Occurrences
+GET,/api/shipping/codes,502 Server Error: Bad Gateway for url: http://10.98.71.229:8080/api/shipping/codes,54
+GET,/api/shipping/cities/ch,502 Server Error: Bad Gateway for url: http://10.98.71.229:8080/api/shipping/cities/ch,1
+GET,/api/shipping/cities/gb,502 Server Error: Bad Gateway for url: http://10.98.71.229:8080/api/shipping/cities/gb,1
