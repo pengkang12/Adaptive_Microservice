@@ -12,7 +12,7 @@ import hashlib
 duration = 120 #sec
 
 
-def getClusterConfiguration(cntCart=1,cntCatalogue=1,cntShipping=1,cntPayment=1,cntRatings=2,cntUser=2, cntWeb=2):
+def getClusterConfiguration(cntCart=1,cntCatalogue=1,cntShipping=1,cntPayment=1,cntRatings=2,cntUser=2, cntWeb=1):
     pods = {}
     pods['cart'] = cntCart
     pods['catalogue'] = cntCatalogue
@@ -20,9 +20,8 @@ def getClusterConfiguration(cntCart=1,cntCatalogue=1,cntShipping=1,cntPayment=1,
     pods['payment'] = cntPayment
     pods['ratings'] = cntRatings
     pods['user'] = cntUser
+    # web should be 1, if increase web's number, the error will have.
     pods['web'] = cntWeb
-
-
     return pods
 
 def getConfigHash(pods):
@@ -33,19 +32,21 @@ def getConfigHash(pods):
     
     return result 
 
-start_position = 3
-end_position = 22
+start_position = 15
+end_position = 120
 
 output_file = "default_test_case.csv"
 
 zones = ['red', 'green','blue', 'yellow']
 
-interference_level = ['none', 'low','medium'] #,'high']
+interference_level = ['low','medium']
 interference_type = ['stream', 'iperf']
 #interference_type = ['iperf']
+#interference_level = ['none']
 
+connections = [10, 20, 30, 40]
+#connections = [40, 50]
 
-connections = [10, 20, 30]
 
 workflow = ["cart", "catalogue", "ratings", "user", "shipping", "payment"]
 
@@ -57,17 +58,18 @@ def produce(shipping=4, ratings=3):
 
     paramCnt = {}
     for pod in workflow:
-        paramCnt[pod] = 2
-    paramCnt['cart'] = 1
+        paramCnt[pod] = 4
+    paramCnt['cart'] = 5
     paramCnt['shipping'] = shipping
     paramCnt['ratings'] = ratings
+    #paramCnt['payment'] = 1 
 
 
     for work in ["cart", "catalogue", "payment", "user"]:#"ratings", "shipping"]:
-        for cnt in [2, 3, 4]:
-            paramCnt[work] += 1
-            if paramCnt[work] == 5:
-                paramCnt[work] = 4
+        for cnt in [5, 3, 2,]:
+            paramCnt[work] -= 1
+            if paramCnt[work] == 1:
+                paramCnt[work] = 2
                 continue 
             if work == "user" and paramCnt["user"] == 4:
                 paramCnt["user"] = 3
@@ -78,7 +80,8 @@ def produce(shipping=4, ratings=3):
                         for con in connections:
                             today = date.today()
                             date_prefix = today.strftime("%b%d")
-                            configuration = getClusterConfiguration(cntCart = paramCnt["cart"], cntCatalogue = paramCnt["catalogue"], cntShipping = paramCnt["shipping"],
+                            configuration = getClusterConfiguration(cntCart = paramCnt["cart"], cntCatalogue = paramCnt["catalogue"],
+                            cntShipping = paramCnt["shipping"], cntRatings = paramCnt["ratings"],
                             cntPayment = paramCnt["payment"], cntUser=paramCnt["user"])
 
                             test_id = "{}_{}_{}_{}_{}_{}".format(date_prefix,zone,con, i_type, i_level, getConfigHash(configuration) )
@@ -88,7 +91,10 @@ def produce(shipping=4, ratings=3):
     print("test")
 with open(output_file,'a' )as f:
     f.write("#test_id/duration/rate/con/zone/i_level/{configuration}/start_position/end_position\n")
-    produce()
-    produce(shipping=3, ratings=3)
-    produce(shipping=3, ratings=2)
+    produce(shipping=4, ratings=3)
+    #produce(shipping=3, ratings=3)
+    #produce(shipping=3, ratings=2)
+
+
+
 
