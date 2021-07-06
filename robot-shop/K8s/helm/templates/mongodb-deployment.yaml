@@ -5,7 +5,7 @@ metadata:
   labels:
     service: mongodb
 spec:
-  replicas: 1
+  replicas: 4
   selector:
     matchLabels:
       service: mongodb
@@ -19,15 +19,15 @@ spec:
       {{ end }}
       containers:
       - name: mongodb
-        image: {{ .Values.image.repo1 }}/rs-mongodb:{{ .Values.image.version }}
+        image: {{ .Values.image.repo }}/rs-mongodb:{{ .Values.image.version }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: 27017
         resources:
           limits:
-            cpu: 200m
+            cpu: 400m
             memory: 200Mi
           requests:
-            cpu: 100m
+            cpu: 200m
             memory: 100Mi
       restartPolicy: Always
