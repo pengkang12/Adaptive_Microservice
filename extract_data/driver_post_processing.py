@@ -62,7 +62,7 @@ def get_latency(dir_name):
                 work = 'ratings'
             elif "payment" in url:
                 work = 'payment'
-            elif "catalogue/categories" in url:
+            elif "catalogue/products" in url or "catalogue/categories" in url :
             #elif "catalogue" in url:
                 work = 'catalogue'
             elif "shipping/confirm" in url:
@@ -87,7 +87,9 @@ def get_latency(dir_name):
                 tmp += latency[key] * c
            
             result[key] = np.percentile(tmp, 95) 
-
+            if key in ["ratings", "catalogue"]:
+                result[key] = np.percentile(tmp, 90) 
+ 
             result2[key] = sum(count[key])
             result3[key] = failure_count[key]
         else:
@@ -313,8 +315,8 @@ def get_line_avg(inputs, start_i, end_i, additional=None):
     total = 0.0        
     for ind ,i in enumerate(diffs):
         total += i
-    #return total / len(diffs)
-    return total
+    return total# / len(diffs)
+    #return total
 
 def get_container_cpu_avg(inputs, start_i, end_i):
     lst = [float(i) for i in inputs[start_i:end_i] if i not in ['']]
@@ -330,7 +332,7 @@ def get_container_cpu_avg(inputs, start_i, end_i):
     if len(new_lst) == 0:
         return "N/A"
     ret = sum(new_lst)#/len(new_lst)
-    print(ret, new_lst, len(inputs))
+    #print(ret, new_lst, len(inputs))
     return ret
 
 def get_average_vm_utilization(vm_cpu, node_list):
@@ -417,14 +419,14 @@ def process(dir_name,duration,mapping):
     duration = int(duration) 
     # 30s for grace and try to get stable results
 
-    start_pos, end_pos = 30, duration-5
+    start_pos, end_pos = 30, 90
     vm_cpu = get_cpu_vm(dir_name, start_pos, end_pos)
-    start_pos, end_pos = 6, 23
+    start_pos, end_pos = 10, 23
     perf_data =  get_perf_data(dir_name,start_pos,end_pos)
     print("Current dirName is: {}".format(dir_name)) #debug
 
-    start_pos, end_pos = 6, 6 + 18 + 1
-    #start_pos, end_pos = 5, 5+1+18
+    #start_pos, end_pos = 10, 10 + 12 + 1
+    start_pos, end_pos = 6, 6+1+18
 
 
     print(start_pos, end_pos)

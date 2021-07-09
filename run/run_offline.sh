@@ -2,6 +2,9 @@ export web_url=`kubectl get service web -n robot-shop | grep web | awk '{print $
 export web_port=`kubectl get services -n robot-shop | grep web | awk '{print $5}' | cut -d ":" -f1`
 echo "web is "$web_url:$web_port
 
+curl  $web_url:${web_port}/api/cart/metrics
+curl  $web_url:${web_port}/api/payment/metrics
+
 # how do you install prometheus, https://github.com/giantswarm/prometheus
 # kubectl get service -n monitoring
 # prometheus                 NodePort    10.97.48.8       <none>        9090:31674/TCP   12m

@@ -24,7 +24,7 @@ NAME        TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)              AGE
 web         ClusterIP   10.105.207.202   <none>        8080/TCP             10d
 ```
 ```
-locust --host http://`kubectl get service -n robot-shop |grep web| awk '{print $3}'`:8080 -f load-gen/robot-shop.py -u 10 -t 60s --print-stats --csv=locust  --headless --stop-time=2
+locust --host http://`kubectl get service -n robot-shop |grep web| awk '{print $3}'`:8080 -f load-gen/robot-shop.py -u 10 -r 5 -t 60s --print-stats --csv=locust  --headless --stop-time=2
 ```
 
 

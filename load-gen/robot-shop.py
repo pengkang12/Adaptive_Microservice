@@ -63,10 +63,17 @@ class UserBehavior(HttpUser):
 
             # vote for item
             if randint(1, 10) <= 3:
-                self.client.put('/api/ratings/api/rate/{}/{}'.format(item['sku'], randint(1, 5)), headers={'x-forwarded-for': fake_ip})
-
+                try:
+                    self.client.put('/api/ratings/api/rate/{}/{}'.format(item['sku'], randint(1, 5)), headers={'x-forwarded-for': fake_ip})
+                except:
+                    print('ratings rate fail')
+                    pass
             self.client.get('/api/catalogue/product/{}'.format(item['sku']), headers={'x-forwarded-for': fake_ip})
-            self.client.get('/api/ratings/api/fetch/{}'.format(item['sku']), headers={'x-forwarded-for': fake_ip})
+            try:
+                self.client.get('/api/ratings/api/fetch/{}'.format(item['sku']), headers={'x-forwarded-for': fake_ip})
+            except:
+                print('rating fetch fail')
+                pass
             self.client.get('/api/cart/add/{}/{}/1'.format(uniqueid, item['sku']), headers={'x-forwarded-for': fake_ip})
 
         cart = self.client.get('/api/cart/cart/{}'.format(uniqueid), headers={'x-forwarded-for': fake_ip}).json()
@@ -83,10 +90,12 @@ class UserBehavior(HttpUser):
         # POST
         cart = self.client.post('/api/shipping/confirm/{}'.format(uniqueid), json=shipping, headers={'x-forwarded-for': fake_ip}).json()
         print('Final cart {}'.format(cart))
-
-        order = self.client.post('/api/payment/pay/{}'.format(uniqueid), json=cart, headers={'x-forwarded-for': fake_ip}).json()
-        print('Order {}'.format(order))
-
+        try:
+            order = self.client.post('/api/payment/pay/{}'.format(uniqueid), json=cart, headers={'x-forwarded-for': fake_ip}).json()
+            print('Order {}'.format(order))
+        except:
+            print("payment fail")
+            pass
     @task
     def error(self):
         fake_ip = random.choice(self.fake_ip_addresses)

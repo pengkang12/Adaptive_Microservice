@@ -11,4 +11,4 @@ echo "promethues "$PROMETHEUS_URL
 
 prometheusName=`kubectl get pod -n monitoring | grep operator | awk '{print $1}'`
 
-python3.6 ../collecting_data/onlineRun.py -pName $prometheusName -k8url $web_url:$web_port -locustF load-gen/robot-shop.py > /tmp/result_online.log &
+python3.6 ../collecting_data/onlineRun.py -pName $prometheusName -k8url $web_url:$web_port -locustF load-gen/robot-shop.py #> /tmp/result_online.log &
