@@ -57,13 +57,13 @@ def get_latency(dir_name):
             failure_count[work] += fail_count
         else:
             work = "other"
-            if "/api/ratings/api/rate" in url:
-            #if "/api/ratings" in url:
+            #if "/api/ratings/api/fetch" in url:
+            if "/api/ratings" in url:
                 work = 'ratings'
             elif "payment" in url:
                 work = 'payment'
-            elif "catalogue/products" in url or "catalogue/categories" in url :
-            #elif "catalogue" in url:
+            #elif "catalogue/products" in url:
+            elif "catalogue/categories" in url:
                 work = 'catalogue'
             elif "shipping/confirm" in url:
             #elif "shipping" in url:
@@ -87,8 +87,8 @@ def get_latency(dir_name):
                 tmp += latency[key] * c
            
             result[key] = np.percentile(tmp, 95) 
-            if key in ["ratings", "catalogue"]:
-                result[key] = np.percentile(tmp, 90) 
+            #if key in ["catalogue"]:
+            #    result[key] = np.percentile(tmp, 90) 
  
             result2[key] = sum(count[key])
             result3[key] = failure_count[key]
@@ -419,14 +419,14 @@ def process(dir_name,duration,mapping):
     duration = int(duration) 
     # 30s for grace and try to get stable results
 
-    start_pos, end_pos = 30, 90
+    start_pos, end_pos = 50, 100
     vm_cpu = get_cpu_vm(dir_name, start_pos, end_pos)
     start_pos, end_pos = 10, 23
     perf_data =  get_perf_data(dir_name,start_pos,end_pos)
     print("Current dirName is: {}".format(dir_name)) #debug
 
-    #start_pos, end_pos = 10, 10 + 12 + 1
-    start_pos, end_pos = 6, 6+1+18
+    start_pos, end_pos = 10, 10 + 12 + 1
+    #start_pos, end_pos = 6, 6+1+18
 
 
     print(start_pos, end_pos)
