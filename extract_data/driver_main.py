@@ -1,7 +1,7 @@
 from collections import defaultdict
 import os
 import sys
-
+import pandas as pd
 import container_mapping
 import driver_post_processing 
 
@@ -70,13 +70,20 @@ def main(current_dir=""):
     data = [os.path.join(current_dir, item) for item in os.listdir(current_dir)
         if os.path.isdir(os.path.join(current_dir, item))]
     
+    header_written = True
+    name_list = []
+    if os.path.exists(output_file):
+        name_list = pd.read_csv(output_file)['test_id'].tolist()
+        header_written = False
+ 
     dir_list = filter(remove_hidden, data)
-    header_written = False
+    result_list = []
     for sub_dir in dir_list:
+        name = sub_dir.split('/')[-1]
         if debug:
             print("driver_post_process.py {} {} {}".format(sub_dir, duration, output_file))
-        if True:
-            if os.path.isfile(os.path.abspath(os.path.join(sub_dir, mapFile))):
+        if name not in name_list:
+            if os.path.exists(os.path.abspath(os.path.join(sub_dir, mapFile))):
                 mapping = container_mapping.read_container_host_mapping(sub_dir, mapFile)  #TODO: mapFile shall be local for each directory 
                 if "iperf" in mapping:
                     del mapping["iperf"] 
@@ -90,19 +97,13 @@ def main(current_dir=""):
                     del mapping["iperf4"]
                 if "stream" in mapping:
                     del mapping["stream"]
-                print(mapping)
             result = driver_post_processing.process(sub_dir, duration, mapping)
-            #print(result)
-            if header_written==False:
-                write_header(result,output_file)
-                header_written=True
-            write_to_csv(result,output_file)
-        else:
-            pass 
-        #except Exception as e:
-        #    print(e)
-            #continue
-
+            result_list.append(result) 
+    if header_written==True:
+        write_header(result_list[0],output_file)
+    for result in result_list:
+        write_to_csv(result,output_file)
+ 
 
 if __name__ == "__main__":
     dir_name = '../training_data/' 
