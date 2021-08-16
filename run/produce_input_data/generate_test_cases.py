@@ -43,9 +43,8 @@ interference_level = ['low','medium']
 interference_type = ['stream', 'iperf']
 #interference_type = ['iperf']
 #interference_level = ['none']
-
 connections = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-#connections = [40, 50]
+connections = [10, 20, 30, 40, 50]
 
 
 workflow = ["cart", "catalogue", "ratings", "user", "shipping", "payment"]
@@ -58,28 +57,28 @@ def produce(shipping=4, ratings=3):
 
     paramCnt = {}
     for pod in workflow:
-        paramCnt[pod] = 4
-    paramCnt['cart'] = 4
+        paramCnt[pod] = 5
+    paramCnt['cart'] = 6
     paramCnt['shipping'] = shipping
     paramCnt['ratings'] = ratings
     #paramCnt['payment'] = 1 
 
 
     for work in ["cart", "catalogue", "payment", "user"]:#"ratings", "shipping"]:
-        #for cnt in [5,]:
-        if True: 
-            #paramCnt[work] -= 1
+        for cnt in [5,4,3,2]:
+        #if True: 
+            paramCnt[work] -= 1
             if paramCnt[work] == 1:
                 paramCnt[work] = 2
                 continue 
-            if work == "user" and paramCnt["user"] == 4:
-                paramCnt["user"] = 4
-                continue 
             for zone in zones:
-                for i_type in interference_type:
+                for j, i_type in enumerate(interference_type):
+                    if j == random.randint(0, 2):
+                        continue
                     for k, i_level in enumerate(interference_level):
                         if k == random.randint(0, 2):
-                            i_level = 'none'
+                            #i_level = 'none'
+                            continue
                         for con in connections:
                             today = date.today()
                             date_prefix = today.strftime("%b%d")
@@ -90,11 +89,10 @@ def produce(shipping=4, ratings=3):
                             test_id = "{}_{}_{}_{}_{}_{}".format(date_prefix,zone,con, i_type, i_level, getConfigHash(configuration) )
                             data = "{}/{}/{}/{}/{}/{}/{}/{}/{}\n".format(test_id,duration,i_type,con,zone,i_level,configuration,start_position,end_position)                             
                             f.write(data)
-
     print("test")
 with open(output_file,'a' )as f:
     f.write("#test_id/duration/rate/con/zone/i_level/{configuration}/start_position/end_position\n")
-    produce(shipping=4, ratings=4)
+    produce(shipping=5, ratings=5)
     #produce(shipping=3, ratings=3)
     #produce(shipping=3, ratings=2)
 
