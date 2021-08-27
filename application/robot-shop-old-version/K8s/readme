@@ -1,0 +1,3 @@
+# the robot-shop-ingress file add by peng.
+if you can't access web. Then you can ingress web to new service.
+kubectl apply robot-shop-ingress.yaml

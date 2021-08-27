@@ -1,0 +1,15 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dcopy
+spec:
+  template:
+    metadata:
+      name: command-demo-pod
+    spec:
+      containers:
+      - name: command-demo-container
+        image: joyrahman/dcopy:v3
+        command: ["python"]
+        args: ["/var/app/dcopy.py", "204800","5000"]
+      restartPolicy: Never

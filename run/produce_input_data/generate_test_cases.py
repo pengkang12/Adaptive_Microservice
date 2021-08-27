@@ -42,7 +42,7 @@ zones = ['red', 'green','blue', 'yellow']
 interference_level = ['low','medium']
 interference_type = ['stream', 'iperf']
 #interference_type = ['iperf']
-#interference_level = ['none']
+interference_level = ['none']
 connections = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 connections = [10, 20, 30, 40, 50]
 

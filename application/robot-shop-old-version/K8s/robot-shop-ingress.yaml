@@ -1,0 +1,13 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: name-virtual-host-ingress
+  labels:
+    name: name-virtual-host-ingress
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: web 
+          servicePort: 8080

@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: dcopy
+  namespace: default
+spec:
+  replicas: 1
+  template:
+    metadata:
+    labels:
+    k8s-app: dcopy_apps
+    spec:
+    containers:
+    - name: dcopy
+        image: joyrahman/dcopy:v3
+        imagePullPolicy: "IfNotPresent"
