@@ -70,4 +70,7 @@ payment gatway can't access.  check k8s/helm/values.yaml ping payment\_gatway.
 
 error4: cart error. check web's number. and check instana is running successful. 
 
-
+# When you use the code, please cite this paper.
+```
+P. Kang and P. Lama, "Robust Resource Scaling of Containerized Microservices with Probabilistic Machine learning," 2020 IEEE/ACM 13th International Conference on Utility and Cloud Computing (UCC), 2020, pp. 122-131, doi: 10.1109/UCC48980.2020.00031.
+```
