@@ -72,5 +72,14 @@ error4: cart error. check web's number. and check instana is running successful.
 
 # When you use the code, please cite this paper.
 ```
-P. Kang and P. Lama, "Robust Resource Scaling of Containerized Microservices with Probabilistic Machine learning," 2020 IEEE/ACM 13th International Conference on Utility and Cloud Computing (UCC), 2020, pp. 122-131, doi: 10.1109/UCC48980.2020.00031.
+@INPROCEEDINGS{
+Kang2020UCC,  
+author={Kang, Peng and Lama, Palden},  
+booktitle={2020 IEEE/ACM 13th International Conference on Utility and Cloud Computing (UCC)},  
+title={Robust Resource Scaling of Containerized Microservices with Probabilistic Machine learning},   
+year={2020},  
+volume={}, 
+number={},  
+pages={122-131},  
+doi={10.1109/UCC48980.2020.00031}}
 ```
