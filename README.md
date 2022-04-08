@@ -70,7 +70,7 @@ payment gatway can't access.  check k8s/helm/values.yaml ping payment\_gatway.
 
 error4: cart error. check web's number. and check instana is running successful. 
 
-# When you use the code, please cite this paper.
+# If you use the code, please cite:
 ```
 @INPROCEEDINGS{
 Kang2020UCC,  
