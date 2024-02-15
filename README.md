@@ -2,7 +2,7 @@
 
 Large-scale web services are increasingly being built with many small modular components (microservices), which can be deployed, updated and scaled seamlessly. These microservices are packaged to run in a lightweight isolated execution environment (containers) and deployed on computing resources rented from cloud providers. However, the complex interactions and the contention of shared hardware resources in cloud data centers pose significant challenges in managing web service performance. In this paper, we present RScale, a robust resource scaling system that provides end-to-end performance guarantee for containerized microservices deployed in the cloud. RScale employs a probabilistic machine learning-based performance model, which can quickly adapt to changing system dynamics and directly provide confidence bounds in the predictions with minimal overhead. It leverages multi-layered data collected from container-level resource usage metrics and virtual machine-level hardware performance counter metrics to capture changing resource demands in the presence of multi-tenant performance interference. We implemented and evaluated RScale on NSF Cloud's Chameleon testbed using KVM for virtualization, Docker Engine for containerization and Kubernetes for container orchestration. Experimental results with an open-source microservices benchmark, Robot Shop, demonstrate the superior prediction accuracy and adaptiveness of our modeling approach compared to popular machine learning techniques. RScale meets the performance SLO (service-level-objective) targets for various microservice workflows even in the presence of multi-tenant performance interference and changing system dynamics.
 
-# If you use the code, please cite:
+## If you use the code, please cite:
 ```
 @INPROCEEDINGS{
 Kang2020UCC,  
@@ -16,10 +16,10 @@ pages={122-131},
 doi={10.1109/UCC48980.2020.00031}}
 ```
 
-# runtine environment
+## runtine environment
 python3.6
 
-# build robot-shop application.
+## build robot-shop application.
 
 Go into k8s-robot-shop-application. and install it. 
 
@@ -29,7 +29,7 @@ helm version is 3.5.4
 
 k8s version is 1.18.2
 
-# workload
+## workload
 
 Go into load-gen. and check README.
 
@@ -44,7 +44,7 @@ locust --host http://`kubectl get service -n robot-shop |grep web| awk '{print $
 ```
 
 
-# how to run program
+## how to run program
 ```
 # online version
 cd run
@@ -52,13 +52,13 @@ bash run_online.sh
 ```
 
 ```
-# collectin training data 
+## collectin training data 
 cd run
 bash run_offline.sh
 ```
 
 
-# how to analyze data
+## how to analyze data
 
 ```
 cd analyze_data
@@ -66,9 +66,9 @@ python driver_main.py ../example_data/
 ```
 
 
-# how to solve some error.
+## how to solve some error.
 
-# check log
+## check log
 ```
 kubectl -n robot-shop logs -f container-name
 ```
